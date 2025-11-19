@@ -45,15 +45,19 @@ O Vite abrirá em `http://localhost:5173` exibindo os perfis e fluxos principais
 
 ## Deploy no Render
 
+✅ **Aplicação publicada:**
+- **Frontend**: https://portaldepedidosdoparceiro.onrender.com
+- **Backend API**: https://portaldepedidosdoparceiro.onrender.com/api
+- **Banco PostgreSQL**: Gerenciado pelo Render
+
 O arquivo `render.yaml` já descreve:
 1. **portal-pedidos-api** — serviço Node apontando para o diretório `backend`.
 2. **portal-pedidos-frontend** — site estático publicado a partir de `frontend/dist`.
 3. **portal-pedidos-db** — banco PostgreSQL compartilhado.
 
-Basta:
-- Criar um novo Blueprint no Render apontando para este repositório.
+Para futuras atualizações:
 - Ajustar secrets adicionais (por exemplo, `JWT_SECRET`, `STORAGE_BUCKET`, etc.) conforme forem surgindo.
-- Habilitar auto-deploy para manter produção sincronizada com `main`.
+- Auto-deploy está habilitado: push para `master` atualiza produção automaticamente.
 
 ## Próximos passos sugeridos
 

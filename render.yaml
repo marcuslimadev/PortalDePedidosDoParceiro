@@ -32,7 +32,7 @@ services:
       - key: NODE_VERSION
         value: 20
       - key: VITE_API_URL
-        value: https://portaldepedidosdoparceiro.onrender.com
+        value: https://portaldepedidosdoparceiro.onrender.com/api
 
 databases:
   - name: portal-pedidos-db
