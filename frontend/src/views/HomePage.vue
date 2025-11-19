@@ -203,21 +203,21 @@ const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.
   height: 80px;
   margin: 0 auto;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(30, 58, 95, 0.4);
 }
 
 .icon-wrapper-info {
-  background: linear-gradient(135deg, #3298dc 0%, #209cee 100%);
-  box-shadow: 0 4px 15px rgba(50, 152, 220, 0.4);
+  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+  box-shadow: 0 4px 15px rgba(8, 145, 178, 0.4);
 }
 
 .icon-wrapper-success {
-  background: linear-gradient(135deg, #48c774 0%, #3ec46d 100%);
-  box-shadow: 0 4px 15px rgba(72, 199, 116, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
 }
 
 .box {
@@ -226,12 +226,12 @@ const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.
 }
 
 .box:hover {
-  border-left-color: #667eea;
+  border-left-color: #1e3a5f;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .hero.is-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
 }
 
 .progress {
@@ -240,7 +240,7 @@ const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.
 }
 
 .has-background-info-light {
-  background-color: #eff5fb !important;
-  border-bottom: 3px solid #3298dc;
+  background-color: #f0f9ff !important;
+  border-bottom: 3px solid #0891b2;
 }
 </style>
