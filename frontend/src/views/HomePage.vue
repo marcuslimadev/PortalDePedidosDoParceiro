@@ -44,15 +44,20 @@
 
     <section class="section">
       <div class="container">
-        <h2 class="title is-2 has-text-centered mb-6">Como Funciona</h2>
+        <h2 class="title is-2 has-text-centered mb-6">
+          <span class="icon has-text-primary"><i class="fas fa-rocket"></i></span>
+          Como Funciona
+        </h2>
         
         <div class="columns is-multiline">
           <div class="column is-4">
-            <div class="card has-text-centered p-5">
+            <div class="card has-text-centered p-5 feature-card">
               <div class="card-content">
-                <span class="icon is-large has-text-primary mb-4">
-                  <i class="fas fa-users fa-3x"></i>
-                </span>
+                <div class="icon-wrapper mb-4">
+                  <span class="icon is-large has-text-white">
+                    <i class="fas fa-users fa-3x"></i>
+                  </span>
+                </div>
                 <h3 class="title is-4">Administração Completa</h3>
                 <p>
                   Cadastre produtos com fotos, defina prazos de pagamento e gerencie clientes
@@ -63,11 +68,13 @@
           </div>
 
           <div class="column is-4">
-            <div class="card has-text-centered p-5">
+            <div class="card has-text-centered p-5 feature-card">
               <div class="card-content">
-                <span class="icon is-large has-text-info mb-4">
-                  <i class="fas fa-cogs fa-3x"></i>
-                </span>
+                <div class="icon-wrapper icon-wrapper-info mb-4">
+                  <span class="icon is-large has-text-white">
+                    <i class="fas fa-cogs fa-3x"></i>
+                  </span>
+                </div>
                 <h3 class="title is-4">Operação Eficiente</h3>
                 <p>
                   Operadores gerenciam limites comerciais, mantêm o catálogo atualizado
@@ -78,11 +85,13 @@
           </div>
 
           <div class="column is-4">
-            <div class="card has-text-centered p-5">
+            <div class="card has-text-centered p-5 feature-card">
               <div class="card-content">
-                <span class="icon is-large has-text-success mb-4">
-                  <i class="fas fa-store fa-3x"></i>
-                </span>
+                <div class="icon-wrapper icon-wrapper-success mb-4">
+                  <span class="icon is-large has-text-white">
+                    <i class="fas fa-store fa-3x"></i>
+                  </span>
+                </div>
                 <h3 class="title is-4">Pedidos Simplificados</h3>
                 <p>
                   Lojas parceiras visualizam catálogo, fazem pedidos, acompanham status
@@ -169,13 +178,69 @@ const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.
 </script>
 
 <style scoped>
+.homepage {
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
 .card {
   height: 100%;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.feature-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.icon-wrapper {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.icon-wrapper-info {
+  background: linear-gradient(135deg, #3298dc 0%, #209cee 100%);
+  box-shadow: 0 4px 15px rgba(50, 152, 220, 0.4);
+}
+
+.icon-wrapper-success {
+  background: linear-gradient(135deg, #48c774 0%, #3ec46d 100%);
+  box-shadow: 0 4px 15px rgba(72, 199, 116, 0.4);
+}
+
+.box {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.box:hover {
+  border-left-color: #667eea;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.hero.is-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.progress {
+  height: 1.5rem;
+  border-radius: 8px;
+}
+
+.has-background-info-light {
+  background-color: #eff5fb !important;
+  border-bottom: 3px solid #3298dc;
 }
 </style>
