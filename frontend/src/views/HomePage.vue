@@ -1,5 +1,26 @@
 <template>
   <div class="homepage">
+    <!-- Progress Banner -->
+    <section class="section has-background-info-light py-4">
+      <div class="container">
+        <div class="columns is-vcentered">
+          <div class="column is-8">
+            <h3 class="title is-5 mb-2">
+              <span class="icon has-text-info"><i class="fas fa-code-branch"></i></span>
+              Status do Desenvolvimento
+            </h3>
+            <progress class="progress is-info" :value="projectProgress" max="100">{{ projectProgress }}%</progress>
+          </div>
+          <div class="column is-4 has-text-right">
+            <div class="box has-background-info has-text-white p-4">
+              <p class="title is-2 has-text-white mb-1">{{ projectProgress }}%</p>
+              <p class="subtitle is-6 has-text-white">{{ completedFeatures }}/{{ totalFeatures }} funcionalidades</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="hero is-primary is-fullheight-with-navbar">
       <div class="hero-body">
         <div class="container has-text-centered">
@@ -139,7 +160,12 @@
 </template>
 
 <script setup>
-// Homepage component
+import { ref } from 'vue';
+
+// Project progress tracking
+const totalFeatures = ref(85);
+const completedFeatures = ref(11);
+const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.value) * 100));
 </script>
 
 <style scoped>
