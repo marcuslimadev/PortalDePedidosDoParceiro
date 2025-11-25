@@ -21,6 +21,29 @@
       </div>
     </section>
 
+    <section class="section py-5">
+      <div class="container">
+        <div class="columns is-multiline">
+          <div
+            v-for="module in moduleStatus"
+            :key="module.name"
+            class="column is-4"
+          >
+            <div class="box status-card">
+              <div class="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                <h4 class="title is-5 mb-0">{{ module.name }}</h4>
+                <span class="tag" :class="module.tagClass">{{ module.label }}</span>
+              </div>
+              <p class="is-size-6 has-text-grey">{{ module.done }} / {{ module.total }} entregues</p>
+              <progress class="progress is-small" :class="module.progressClass" :value="module.progress" max="100">
+                {{ module.progress }}%
+              </progress>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="hero is-primary is-fullheight-with-navbar">
       <div class="hero-body">
         <div class="container has-text-centered">
@@ -169,12 +192,42 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 // Project progress tracking
 const totalFeatures = ref(85);
-const completedFeatures = ref(11);
-const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.value) * 100));
+const completedFeatures = ref(17);
+const projectProgress = computed(() => Math.round((completedFeatures.value / totalFeatures.value) * 100));
+
+const moduleStatus = computed(() => [
+  {
+    name: 'Autenticação & Autorização',
+    done: 6,
+    total: 8,
+    label: 'Em andamento',
+    progressClass: 'is-link',
+    tagClass: 'is-warning'
+  },
+  {
+    name: 'Gestão de Produtos',
+    done: 6,
+    total: 12,
+    label: 'Catálogo em construção',
+    progressClass: 'is-success',
+    tagClass: 'is-success'
+  },
+  {
+    name: 'Total do Projeto',
+    done: completedFeatures.value,
+    total: totalFeatures.value,
+    label: `${projectProgress.value}% concluído`,
+    progressClass: 'is-info',
+    tagClass: 'is-info'
+  }
+].map(module => ({
+  ...module,
+  progress: Math.round((module.done / module.total) * 100)
+})));
 </script>
 
 <style scoped>
@@ -242,5 +295,10 @@ const projectProgress = ref(Math.round((completedFeatures.value / totalFeatures.
 .has-background-info-light {
   background-color: #f0f9ff !important;
   border-bottom: 3px solid #0891b2;
+}
+
+.status-card {
+  border: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 </style>
