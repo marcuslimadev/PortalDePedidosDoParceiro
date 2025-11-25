@@ -6,18 +6,23 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function runMigration() {
+async function runMigrations() {
   const client = await getClient();
-  
+
   try {
-    const migrationSQL = fs.readFileSync(
-      path.join(__dirname, '001_create_users.sql'),
-      'utf8'
-    );
-    
-    console.log('Running migration: 001_create_users.sql');
-    await client.query(migrationSQL);
-    console.log('✅ Migration completed successfully!');
+    const migrationFiles = fs
+      .readdirSync(__dirname)
+      .filter(file => file.endsWith('.sql'))
+      .sort();
+
+    for (const file of migrationFiles) {
+      const migrationSQL = fs.readFileSync(path.join(__dirname, file), 'utf8');
+      console.log(`Running migration: ${file}`);
+      await client.query(migrationSQL);
+      console.log(`✅ ${file} aplicada com sucesso`);
+    }
+
+    console.log('Todas as migrations foram executadas.');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;
@@ -26,6 +31,6 @@ async function runMigration() {
   }
 }
 
-runMigration()
+runMigrations()
   .then(() => process.exit(0))
   .catch(() => process.exit(1));
