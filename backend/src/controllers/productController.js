@@ -74,7 +74,7 @@ export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { codigo, descricao, preco, unidade, tributacao, estoque = 0, categoria = null } = req.body;
 
-    const existing = await query('SELECT id FROM products WHERE id = $1', [id]);
+    const existing = await query('SELECT id, preco FROM products WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
@@ -99,10 +99,39 @@ export const updateProduct = async (req, res) => {
       [codigo, descricao, preco, unidade, tributacao, estoque, categoria, id]
     );
 
+    const previousPrice = existing.rows[0].preco;
+    if (Number(previousPrice) !== Number(preco)) {
+      await query(
+        `INSERT INTO product_price_history (product_id, preco_anterior, preco_novo, changed_by)
+         VALUES ($1, $2, $3, $4)`,
+        [id, previousPrice, preco, req.user?.id || null]
+      );
+    }
+
     res.json({ product: result.rows[0] });
   } catch (error) {
     console.error('Erro ao atualizar produto:', error);
     res.status(500).json({ error: 'Erro ao atualizar produto' });
+  }
+};
+
+export const getProductPriceHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const history = await query(
+      `SELECT h.id, h.preco_anterior, h.preco_novo, h.changed_at, u.nome AS usuario
+       FROM product_price_history h
+       LEFT JOIN users u ON u.id = h.changed_by
+       WHERE h.product_id = $1
+       ORDER BY h.changed_at DESC`,
+      [id]
+    );
+
+    res.json({ history: history.rows });
+  } catch (error) {
+    console.error('Erro ao buscar histórico de preços:', error);
+    res.status(500).json({ error: 'Erro ao buscar histórico de preços' });
   }
 };
 
