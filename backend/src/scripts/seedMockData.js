@@ -1,5 +1,11 @@
 import bcrypt from 'bcryptjs';
-import { query } from '../config/database.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { getClient, query } from '../config/database.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const adminUser = {
   email: 'admin@portalpedidos.com',
@@ -164,8 +170,10 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
   const clientUser = userMap.get(orderTemplate.lojaEmail);
   if (!clientUser) return;
 
-  const client = await query('BEGIN');
+  const client = await getClient();
   try {
+    await client.query('BEGIN');
+
     const itemsData = orderTemplate.items.map(item => {
       const product = productMap.get(item.codigo);
       if (!product) throw new Error(`Produto ${item.codigo} nao encontrado`);
@@ -175,7 +183,7 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
 
     const total = itemsData.reduce((sum, item) => sum + item.subtotal, 0);
 
-    const orderResult = await query(
+    const orderResult = await client.query(
       `INSERT INTO orders (loja_id, status, payment_terms, observations, total)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
@@ -185,14 +193,14 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
     const orderId = orderResult.rows[0].id;
 
     for (const item of itemsData) {
-      await query(
+      await client.query(
         `INSERT INTO order_items (order_id, product_id, quantidade, preco_unitario, subtotal)
          VALUES ($1, $2, $3, $4, $5)`,
         [orderId, item.product.id, item.quantidade, item.product.preco, item.subtotal]
       );
     }
 
-    await query(
+    await client.query(
       `UPDATE users
           SET credit_used = COALESCE(credit_used, 0) + $1,
               updated_at = NOW()
@@ -200,16 +208,65 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
       [total, clientUser.id]
     );
 
-    await query('COMMIT');
+    await client.query('COMMIT');
   } catch (error) {
-    await query('ROLLBACK');
+    await client.query('ROLLBACK');
     throw error;
   } finally {
     client.release?.();
   }
 }
 
+async function ensureMigrations () {
+  console.log('>> Checando estrutura do banco...');
+  const client = await getClient();
+  try {
+    const usersTable = await client.query("SELECT to_regclass('public.users') AS reg");
+    const usersExists = !!usersTable.rows[0]?.reg;
+
+    if (!usersExists) {
+      console.log('Tabela users nao encontrada. Executando todas as migrations...');
+      const migrationFiles = fs
+        .readdirSync(path.join(__dirname, '../migrations'))
+        .filter(file => file.endsWith('.sql'))
+        .sort();
+
+      for (const file of migrationFiles) {
+        const sql = fs.readFileSync(path.join(__dirname, '../migrations', file), 'utf8');
+        console.log(`-- Migration ${file}`);
+        await client.query(sql);
+      }
+      console.log('Migrations basicas aplicadas.');
+      return;
+    }
+
+    const hasCnpj = await client.query(`
+      SELECT 1 FROM information_schema.columns
+       WHERE table_name = 'users' AND column_name = 'cnpj'
+       LIMIT 1
+    `);
+
+    if (hasCnpj.rowCount === 0) {
+      console.log('Campos de cliente nao encontrados. Aplicando migrations 005 e 006...');
+      for (const file of ['005_alter_users_add_client_fields.sql', '006_create_client_credit_history.sql']) {
+        const sql = fs.readFileSync(path.join(__dirname, '../migrations', file), 'utf8');
+        console.log(`-- Migration ${file}`);
+        await client.query(sql);
+      }
+      console.log('Migrations de cliente aplicadas.');
+    } else {
+      console.log('Estrutura ja contem campos de cliente. Nenhuma migration aplicada.');
+    }
+  } catch (error) {
+    console.error('Falha ao checar/aplicar migrations:', error);
+    process.exit(1);
+  } finally {
+    client.release();
+  }
+}
+
 async function runSeed () {
+  await ensureMigrations();
   console.log('>> Iniciando carga de dados mock...');
 
   const admin = await upsertUser(adminUser);
