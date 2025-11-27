@@ -333,10 +333,6 @@ const orderForm = reactive({
   paymentTerms: '30 dias',
   observations: ''
 });
-const notifications = ref([]);
-const notificationsMeta = ref({ unread: 0 });
-const loadingNotifications = ref(false);
-
 const orderTotal = computed(() => cart.value.reduce((sum, item) => sum + item.subtotal, 0));
 let orderStream = null;
 const notifications = ref([]);

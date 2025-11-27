@@ -19,5 +19,19 @@ export const productService = {
 
   async remove(id) {
     await api.delete(`/products/${id}`);
+  },
+
+  async exportCsv() {
+    const response = await api.get('/products/export/csv', { responseType: 'blob' });
+    return response.data;
+  },
+
+  async importCsv(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/products/import/csv', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
   }
 };

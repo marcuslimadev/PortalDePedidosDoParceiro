@@ -27,7 +27,7 @@
           <div class="column">
             <p class="subtitle is-6 has-text-grey">Ola, {{ user?.nome }}!</p>
             <h1 class="title is-3">Central de administracao</h1>
-            <p class="has-text-grey-dark">Cadastre, edite e acompanhe o catalogo disponivel para as lojas parceiras.</p>
+            <p class="has-text-grey-dark">Sincronize o catalogo (API/CSV) e acompanhe lojas e pedidos em um so lugar.</p>
           </div>
           <div class="column is-narrow">
             <div class="box kpi-box has-background-primary has-text-white">
@@ -49,8 +49,8 @@
           <div class="column is-3-desktop is-6-tablet">
             <div class="box has-background-info-light">
               <p class="heading">Fluxo</p>
-              <p class="title is-4">Cadastro + Edicao</p>
-              <p class="is-size-7">Validado com campos Winthor</p>
+              <p class="title is-4">Sync + Importacao</p>
+              <p class="is-size-7">API publica + CSV completo</p>
             </div>
           </div>
           <div class="column is-3-desktop is-6-tablet">
@@ -70,84 +70,52 @@
         </div>
 
         <div class="box">
-          <div class="level mb-4">
+          <div class="level mb-3">
             <div class="level-left">
               <div>
                 <p class="heading">Catalogo de produtos</p>
-                <p class="title is-5">Cadastro e edicao</p>
+                <p class="title is-5">Listagem, API e CSV completos</p>
+                <p class="is-size-7 has-text-grey">Somente leitura aqui; cadastros e edicao via integracao ou importacao.</p>
               </div>
             </div>
-            <div class="level-right">
-              <div class="field has-addons">
-                <p class="control is-expanded">
-                  <input
-                    v-model="searchTerm"
-                    class="input"
-                    type="text"
-                    placeholder="Buscar por codigo ou descricao"
-                    @keyup.enter="handleSearch"
-                  >
-                </p>
-                <p class="control">
-                  <button class="button is-primary" @click="handleSearch" :disabled="loadingProducts">
-                    <span class="icon"><i class="fas fa-search"></i></span>
-                    <span>Buscar</span>
-                  </button>
-                </p>
-              </div>
+            <div class="level-right buttons">
+              <button class="button is-link is-light" @click="reloadProducts" :disabled="loadingProducts">
+                <span class="icon"><i class="fas fa-sync-alt"></i></span>
+                <span>Recarregar</span>
+              </button>
+              <button class="button is-primary is-light" @click="exportProductsCsv" :disabled="exportingProducts">
+                <span class="icon"><i class="fas fa-file-download"></i></span>
+                <span>Exportar CSV</span>
+              </button>
+              <button class="button is-primary" @click="triggerImport" :disabled="importingProducts">
+                <span class="icon"><i class="fas fa-file-upload"></i></span>
+                <span>Importar CSV</span>
+              </button>
+              <input ref="fileInput" type="file" accept=".csv,text/csv" class="is-hidden" @change="handleImportChange">
             </div>
           </div>
 
-          <div v-if="feedback.message" class="notification" :class="feedback.type">
-            {{ feedback.message }}
+          <div class="field has-addons mb-4">
+            <p class="control is-expanded">
+              <input
+                v-model="searchTerm"
+                class="input"
+                type="text"
+                placeholder="Buscar por codigo ou descricao"
+                @keyup.enter="handleSearch"
+              >
+            </p>
+            <p class="control">
+              <button class="button is-primary" @click="handleSearch" :disabled="loadingProducts">
+                <span class="icon"><i class="fas fa-search"></i></span>
+                <span>Buscar</span>
+              </button>
+            </p>
           </div>
 
-          <form @submit.prevent="handleSubmit" class="mb-5">
-            <div class="columns is-multiline">
-              <div class="column is-3">
-                <label class="label">Codigo</label>
-                <input v-model="productForm.codigo" class="input" placeholder="WIN123" required>
-              </div>
-              <div class="column is-5">
-                <label class="label">Descricao</label>
-                <input v-model="productForm.descricao" class="input" placeholder="Produto conforme Winthor" required>
-              </div>
-              <div class="column is-2">
-                <label class="label">Preco (R$)</label>
-                <input v-model.number="productForm.preco" class="input" type="number" min="0" step="0.01" required>
-              </div>
-              <div class="column is-2">
-                <label class="label">Unidade</label>
-                <input v-model="productForm.unidade" class="input" placeholder="UN/PC/CX" required>
-              </div>
-              <div class="column is-3">
-                <label class="label">Tributacao</label>
-                <input v-model="productForm.tributacao" class="input" placeholder="ICMS/IPI" required>
-              </div>
-              <div class="column is-2">
-                <label class="label">Estoque</label>
-                <input v-model.number="productForm.estoque" class="input" type="number" min="0" step="1">
-              </div>
-              <div class="column is-3">
-                <label class="label">Categoria</label>
-                <input v-model="productForm.categoria" class="input" placeholder="Bebidas, Higiene...">
-              </div>
-            </div>
-
-            <div class="buttons">
-              <button type="submit" class="button is-primary" :class="{ 'is-loading': saving }">
-                <span class="icon"><i class="fas" :class="isEditing ? 'fa-save' : 'fa-plus-circle'"></i></span>
-                <span>{{ isEditing ? 'Salvar alteracoes' : 'Cadastrar produto' }}</span>
-              </button>
-              <button type="button" class="button is-link is-light" @click="openWizard" :disabled="saving">
-                <span class="icon"><i class="fas fa-wand-magic-sparkles"></i></span>
-                <span>Ficha Winthor (wizard)</span>
-              </button>
-              <button type="button" class="button is-light" @click="resetForm" :disabled="saving">
-                Limpar
-              </button>
-            </div>
-          </form>
+          <div v-if="productFeedback.message" class="notification" :class="productFeedback.type">
+            {{ productFeedback.message }}
+          </div>
 
           <div class="table-container">
             <table class="table is-fullwidth is-striped">
@@ -160,15 +128,14 @@
                   <th>Tributacao</th>
                   <th>Estoque</th>
                   <th>Categoria</th>
-                  <th class="has-text-centered">Acoes</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="!products.length && !loadingProducts">
-                  <td colspan="8" class="has-text-centered has-text-grey">Nenhum produto cadastrado ainda.</td>
+                  <td colspan="7" class="has-text-centered has-text-grey">Nenhum produto encontrado. Utilize a importacao CSV ou a API.</td>
                 </tr>
                 <tr v-if="loadingProducts">
-                  <td colspan="8" class="has-text-centered">
+                  <td colspan="7" class="has-text-centered">
                     <span class="icon has-text-info"><i class="fas fa-spinner fa-spin"></i></span>
                     Carregando catalogo...
                   </td>
@@ -181,20 +148,6 @@
                   <td>{{ product.tributacao }}</td>
                   <td>{{ product.estoque }}</td>
                   <td>{{ product.categoria || '-' }}</td>
-                  <td class="has-text-centered">
-                    <div class="buttons is-centered">
-                      <button class="button is-small is-info" @click="startEdit(product)">
-                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
-                      </button>
-                      <button
-                        class="button is-small is-danger"
-                        @click="handleDelete(product)"
-                        :disabled="saving"
-                      >
-                        <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               </tbody>
             </table>
@@ -401,429 +354,28 @@
       </div>
     </section>
 
-    <div class="modal" :class="{ 'is-active': showWizard }">
-      <div class="modal-background" @click="closeWizard"></div>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">Wizard Winthor</p>
-          <button class="delete" aria-label="close" @click="closeWizard"></button>
-        </header>
-        <section class="modal-card-body">
-          <div class="wizard-steps">
-            <div
-              v-for="(section, index) in wizardSections"
-              :key="section.title"
-              class="wizard-step"
-              :class="{ active: wizardStep === index + 1 }"
-            >
-              <span class="step-index">{{ index + 1 }}</span>
-              <div>
-                <p class="is-size-6 has-text-weight-semibold">{{ section.title }}</p>
-                <p class="is-size-7 has-text-grey">{{ section.description }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="wizard-form">
-            <div v-for="(section, index) in wizardSections" :key="section.title" v-show="wizardStep === index + 1">
-              <div class="columns is-multiline">
-                <div v-for="field in section.fields" :key="field.key" class="column is-6">
-                  <label class="label">{{ field.label }}</label>
-                  <input
-                    class="input"
-                    :value="productForm.winthor_data?.[field.key] || ''"
-                    @input="updateWinthorField(field.key, $event.target.value)"
-                    :placeholder="field.label"
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="box is-light mt-3">
-              <p class="label is-size-7">Adicionar campo livre</p>
-              <div class="columns is-mobile">
-                <div class="column is-5">
-                  <input class="input is-small" v-model="customFieldKey" placeholder="nome_campo">
-                </div>
-                <div class="column is-5">
-                  <input class="input is-small" v-model="customFieldValue" placeholder="valor">
-                </div>
-                <div class="column is-2">
-                  <button class="button is-link is-small is-fullwidth" @click="addCustomField">
-                    <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        <footer class="modal-card-foot is-justify-content-space-between">
-          <div>
-            <button class="button" @click="wizardPrev" :disabled="wizardStep === 1">Voltar</button>
-            <button class="button is-link" @click="wizardNext" :disabled="wizardStep === wizardSections.length">Proximo</button>
-          </div>
-          <div>
-            <button class="button is-primary" @click="closeWizard">Concluir</button>
-          </div>
-        </footer>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { authService } from '../services/api';
-import { productService } from '../services/productService';
-import { clientService } from '../services/clientService';
-import { orderService } from '../services/orderService';
+import { computed, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { authService } from "../services/api";
+import { productService } from "../services/productService";
+import { clientService } from "../services/clientService";
+import { orderService } from "../services/orderService";
 
 const router = useRouter();
 const user = ref(null);
 
-// Produtos
+// Produtos (somente leitura + CSV/API)
 const products = ref([]);
 const loadingProducts = ref(false);
-const saving = ref(false);
+const exportingProducts = ref(false);
+const importingProducts = ref(false);
 const searchTerm = ref('');
-const feedback = reactive({ message: '', type: 'is-primary' });
-const showWizard = ref(false);
-const wizardStep = ref(1);
-const customFieldKey = ref('');
-const customFieldValue = ref('');
-const wizardSections = [
-  {
-    title: 'Identificacao basica',
-    description: 'Campos essenciais do produto',
-    fields: [
-      { key: 'rid', label: 'RID' },
-      { key: 'codprod', label: 'Cod. Produto' },
-      { key: 'descricao', label: 'Descricao' },
-      { key: 'codfab', label: 'Cod. Fabrica' },
-      { key: 'dv', label: 'Digito verificador' },
-      { key: 'numoriginal', label: 'Num. original' },
-      { key: 'codprodprinc', label: 'Cod. prod. principal' },
-      { key: 'codprodmaster', label: 'Cod. prod. master' },
-      { key: 'registropeca', label: 'Registro peca' },
-      { key: 'obs', label: 'Observacao' },
-      { key: 'obs2', label: 'Observacao 2' },
-      { key: 'descricao1', label: 'Descricao 1' },
-      { key: 'descricao2', label: 'Descricao 2' },
-      { key: 'descricao3', label: 'Descricao 3' },
-      { key: 'descricao4', label: 'Descricao 4' },
-      { key: 'descricao5', label: 'Descricao 5' },
-      { key: 'descricao6', label: 'Descricao 6' },
-      { key: 'descricao7', label: 'Descricao 7' }
-    ]
-  },
-  {
-    title: 'Classificacao mercadologica',
-    description: 'Fornecedor, departamento, secao, marca, categoria',
-    fields: [
-      { key: 'codfornec', label: 'Cod. fornecedor' },
-      { key: 'fornecedor', label: 'Fornecedor' },
-      { key: 'codepto', label: 'Cod. departamento' },
-      { key: 'codsec', label: 'Cod. secao' },
-      { key: 'codmarca', label: 'Cod. marca' },
-      { key: 'codsubmarca', label: 'Cod. submarca' },
-      { key: 'codcategoria', label: 'Cod. categoria' },
-      { key: 'codsubcategoria', label: 'Cod. subcategoria' },
-      { key: 'codlinhaprod', label: 'Cod. linha produto' },
-      { key: 'tipomerc', label: 'Tipo mercadoria' },
-      { key: 'naturezaproduto', label: 'Natureza produto' },
-      { key: 'coddistrb', label: 'Cod. distribuidora' },
-      { key: 'tipoprod', label: 'Tipo produto' },
-      { key: 'tipocustotransf', label: 'Tipo custo transf' },
-      { key: 'status', label: 'Status' }
-    ]
-  },
-  {
-    title: 'Unidades e embalagem',
-    description: 'Unidades de venda/estoque e volumes',
-    fields: [
-      { key: 'embalagem', label: 'Embalagem' },
-      { key: 'unidade', label: 'Unidade' },
-      { key: 'qtunit', label: 'Qtde unidade' },
-      { key: 'embalagemmaster', label: 'Embalagem master' },
-      { key: 'unidademaster', label: 'Unidade master' },
-      { key: 'qtunitcx', label: 'Qtde unid. caixa' },
-      { key: 'unidadepadrao', label: 'Unidade padrao' },
-      { key: 'idembalagem', label: 'Id embalagem' },
-      { key: 'codprodembalagem', label: 'Cod. prod. embalagem' },
-      { key: 'codformatopapel', label: 'Formato papel' },
-      { key: 'gramatura', label: 'Gramatura' },
-      { key: 'descpapel', label: 'Descricao papel' }
-    ]
-  },
-  {
-    title: 'Codigos de barras e auxiliares',
-    description: 'GTIN e codigos auxiliares',
-    fields: [
-      { key: 'gtincodauxiliar', label: 'GTIN cod. auxiliar' },
-      { key: 'gtincodauxiliar2', label: 'GTIN cod. auxiliar 2' },
-      { key: 'gtincodauxiliartrib', label: 'GTIN cod. auxiliar trib.' },
-      { key: 'codauxiliar', label: 'Cod. auxiliar' },
-      { key: 'codauxiliar2', label: 'Cod. auxiliar 2' },
-      { key: 'codauxiliartrib', label: 'Cod. auxiliar trib.' },
-      { key: 'codprodfornec', label: 'Cod. produto fornecedor' },
-      { key: 'codinterno', label: 'Cod. interno' },
-      { key: 'codprodsintegra', label: 'Cod. prod. sintegra' }
-    ]
-  },
-  {
-    title: 'Comercial e precos',
-    description: 'Margens, precos maximos e comissoes',
-    fields: [
-      { key: 'revenda', label: 'Revenda' },
-      { key: 'seqtabpreco', label: 'Seq. tabela preco' },
-      { key: 'margemmin', label: 'Margem minima' },
-      { key: 'precofixo', label: 'Preco fixo' },
-      { key: 'precomaxconsumtab', label: 'Preco max. consumidor (tabela)' },
-      { key: 'precomaxconsum', label: 'Preco max. consumidor' },
-      { key: 'precofabrica', label: 'Preco fabrica' },
-      { key: 'precicestrangeira', label: 'Preco custo estrangeira' },
-      { key: 'percvenda', label: '% venda' },
-      { key: 'pcomext1', label: '% comissao externa 1' },
-      { key: 'pcomint1', label: '% comissao interna 1' },
-      { key: 'pcomrep1', label: '% comissao representante 1' },
-      { key: 'tipocomissao', label: 'Tipo comissao' },
-      { key: 'classecomissao', label: 'Classe comissao' },
-      { key: 'percebonificvenda', label: '% bonificacao venda' },
-      { key: 'vlbonific', label: 'Valor bonificacao' },
-      { key: 'percbon', label: '% bonificacao' }
-    ]
-  },
-  {
-    title: 'Logistica e estoque',
-    description: 'Regras de compra, lote e validade',
-    fields: [
-      { key: 'codprazoent', label: 'Cod. prazo entrega' },
-      { key: 'multiplo', label: 'Multiplo venda' },
-      { key: 'multiplocompras', label: 'Multiplo compras' },
-      { key: 'qtminsugcompra', label: 'Qtde minima compra' },
-      { key: 'qtdeMaxSeparPedido', label: 'Qtde max separacao' },
-      { key: 'aceitavendafracao', label: 'Aceita fracao' },
-      { key: 'checarmultiplovendabnf', label: 'Checar multiplo bonificado' },
-      { key: 'conferencocheckout', label: 'Confere checkout' },
-      { key: 'prazomaxvalidade', label: 'Prazo max validade' },
-      { key: 'prazominvalidade', label: 'Prazo min validade' },
-      { key: 'prazoval', label: 'Prazo validade padrao' },
-      { key: 'numdiasvalidademin', label: 'Dias validade minima' },
-      { key: 'controlavalidadedolote', label: 'Controla validade lote' },
-      { key: 'dtinicontlote', label: 'Data inicio controle lote' },
-      { key: 'estoqueporlote', label: 'Estoque por lote' },
-      { key: 'proxnumlote', label: 'Prox numero lote' },
-      { key: 'prefixolote', label: 'Prefixo lote' },
-      { key: 'induzlote', label: 'Induz lote' },
-      { key: 'numlote', label: 'Numero lote' },
-      { key: 'pesobruto', label: 'Peso bruto' },
-      { key: 'pesoliq', label: 'Peso liquido' },
-      { key: 'pesoliqdi', label: 'Peso liquido DI' },
-      { key: 'pesobrutomaster', label: 'Peso bruto master' },
-      { key: 'pesoembalagem', label: 'Peso embalagem' },
-      { key: 'pesopesa', label: 'Peso peca' },
-      { key: 'pesovariavel', label: 'Peso variavel' },
-      { key: 'pesominimo', label: 'Peso minimo' },
-      { key: 'pesomaximo', label: 'Peso maximo' },
-      { key: 'pesobrutofrete', label: 'Peso bruto frete' },
-      { key: 'valortaraporpeca', label: 'Valor tara peca' },
-      { key: 'taraporpeca', label: 'Tara por peca' },
-      { key: 'percperdakg', label: '% perda kg' },
-      { key: 'percdiferencakgfrio', label: '% diferenca kg frio' },
-      { key: 'fatorconversaokg', label: 'Fator conversao kg' },
-      { key: 'tipostoque', label: 'Tipo estoque' },
-      { key: 'classeestoque', label: 'Classe estoque' },
-      { key: 'sugvenda', label: 'Sugestao venda' },
-      { key: 'tipomedicamento', label: 'Tipo medicamento' },
-      { key: 'tipodescarga', label: 'Tipo descarga' },
-      { key: 'tipovolumedescarga', label: 'Tipo volume descarga' },
-      { key: 'freteespecial', label: 'Frete especial' }
-    ]
-  },
-  {
-    title: 'Dimensoes e WMS',
-    description: 'Dados para armazenagem e palete',
-    fields: [
-      { key: 'usawms', label: 'Usa WMS' },
-      { key: 'modulo', label: 'Modulo WMS' },
-      { key: 'volume', label: 'Volume' },
-      { key: 'altura', label: 'Altura' },
-      { key: 'diametroexterno', label: 'Diametro externo' },
-      { key: 'diametrointerno', label: 'Diametro interno' },
-      { key: 'litragem', label: 'Litragem' },
-      { key: 'numero', label: 'Numero' },
-      { key: 'qtmetros', label: 'Qtde metros' },
-      { key: 'rua', label: 'Rua' },
-      { key: 'codagrupmapasep', label: 'Cod. agrup. mapa separacao' },
-      { key: 'codgrade', label: 'Cod. grade' },
-      { key: 'colunagrade', label: 'Coluna grade' },
-      { key: 'tamanhopeca', label: 'Tamanho peca' },
-      { key: 'lastropal', label: 'Lastro palete' },
-      { key: 'alturapal', label: 'Altura palete' },
-      { key: 'alturatotal', label: 'Altura total' },
-      { key: 'tipoalturapalete', label: 'Tipo altura palete' },
-      { key: 'qttotpal', label: 'Qtde total palete' }
-    ]
-  },
-  {
-    title: 'Informacoes tecnicas e adicionais',
-    description: 'Ficha tecnica, literatura e concentracao',
-    fields: [
-      { key: 'enviainftecnicanfe', label: 'Envia inf. tecnica NFe' },
-      { key: 'codtablit', label: 'Cod. tabela literatura' },
-      { key: 'informacoestecnicas', label: 'Informacoes tecnicas' },
-      { key: 'dadostecnicos', label: 'Dados tecnicos' },
-      { key: 'codgrulit', label: 'Cod. grupo literatura' },
-      { key: 'destaquefichatecnica', label: 'Destaque ficha tecnica' },
-      { key: 'dirfotoprod', label: 'Diretorio fotos' },
-      { key: 'seqpagina', label: 'Sequencial pagina' },
-      { key: 'numpag', label: 'Numero pagina' },
-      { key: 'letrapagina', label: 'Letra pagina' },
-      { key: 'usaclassificacao', label: 'Usa classificacao' },
-      { key: 'vlmaodeobra', label: 'Valor mao de obra' },
-      { key: 'concentracao', label: 'Concentracao' }
-    ]
-  },
-  {
-    title: 'Fiscal e tributario',
-    description: 'NCM, IPI, PIS/COFINS e observacoes fiscais',
-    fields: [
-      { key: 'codncmex', label: 'NCM' },
-      { key: 'nbm', label: 'NBM' },
-      { key: 'extipi', label: 'EXTIPI' },
-      { key: 'unidadetrib', label: 'Unidade tributavel' },
-      { key: 'unidadetribex', label: 'Unidade trib. exterior' },
-      { key: 'fatorconvtrib', label: 'Fator conv. trib.' },
-      { key: 'fatorconvtribex', label: 'Fator conv. trib. ext.' },
-      { key: 'classificfiscal', label: 'Classificacao fiscal' },
-      { key: 'codunidmedidanf', label: 'Cod. unid. medida NF' },
-      { key: 'codagregacao', label: 'Cod. agregacao' },
-      { key: 'usacodagregacao', label: 'Usa cod. agregacao' },
-      { key: 'percaliqext', label: 'Aliquota externa' },
-      { key: 'percalqint', label: 'Aliquota interna' },
-      { key: 'pericm', label: '% ICMS' },
-      { key: 'pericmsantecipado', label: '% ICMS antecipado' },
-      { key: 'percicmred', label: '% red. base ICMS' },
-      { key: 'percipi', label: '% IPI' },
-      { key: 'perciva', label: '% IVA/MVA' },
-      { key: 'perpis', label: '% PIS' },
-      { key: 'percofins', label: '% COFINS' },
-      { key: 'percoutrasdesp', label: '% outras despesas' },
-      { key: 'percdespadicional', label: '% desp. adicional' },
-      { key: 'percsuframa', label: '% SUFRAMA' },
-      { key: 'aliquotacif', label: 'Aliquota CIF' },
-      { key: 'imunetrib', label: 'Imune tributacao' },
-      { key: 'ob scontxcampo', label: 'Obs contab. campo' },
-      { key: 'obsfiscoxcampo', label: 'Obs fisco campo' },
-      { key: 'obscontxttexto', label: 'Obs contab. texto' },
-      { key: 'obsfiscoxtexto', label: 'Obs fisco texto' },
-      { key: 'cestabasicalegis', label: 'Cesta basica legis' }
-    ]
-  },
-  {
-    title: 'Importacao e custos',
-    description: 'Dados de importacao e frete',
-    fields: [
-      { key: 'importado', label: 'Importado' },
-      { key: 'conciliaimportacao', label: 'Concilia importacao' },
-      { key: 'usalicencaimportacao', label: 'Usa licenca importacao' },
-      { key: 'moeda', label: 'Moeda' },
-      { key: 'dtdolar', label: 'Data dolar' },
-      { key: 'custorep', label: 'Custo reposicao' },
-      { key: 'custoreptab', label: 'Custo reposicao tabela' },
-      { key: 'percfrete', label: '% frete CIF' },
-      { key: 'percfretefob', label: '% frete FOB' },
-      { key: 'percoutrasdesp', label: '% outras despesas' },
-      { key: 'percdespadicional', label: '% desp adicional' },
-      { key: 'percsuframa', label: '% SUFRAMA' },
-      { key: 'tipoembarqueimp', label: 'Tipo embarque importacao' },
-      { key: 'paisorigem', label: 'Pais origem' }
-    ]
-  },
-  {
-    title: 'Datas e usuarios',
-    description: 'Controle de criacao e alteracao',
-    fields: [
-      { key: 'dtcadastro', label: 'Data cadastro' },
-      { key: 'codfunccadastro', label: 'Func. cadastro' },
-      { key: 'dtultalter', label: 'Data ultima alteracao' },
-      { key: 'codfuncultalter', label: 'Func. ult. alteracao' },
-      { key: 'dtultaltcad', label: 'Data ult. alt. cadastro' },
-      { key: 'codfuncultaltcad', label: 'Func. ult. alt. cadastro' },
-      { key: 'dtultaltcom', label: 'Data ult. alt. comercial' },
-      { key: 'dtexclusao', label: 'Data exclusao' }
-    ]
-  },
-  {
-    title: 'Saude e farmacia',
-    description: 'Campos ANVISA/SNGPC',
-    fields: [
-      { key: 'anvisa', label: 'Registro ANVISA' },
-      { key: 'simpro', label: 'Codigo SIMPRO' },
-      { key: 'pmpfmedicamento', label: 'PMPF' },
-      { key: 'registromsmed', label: 'Registro MS' },
-      { key: 'codmotisencaoanvisa', label: 'Cod. isencao ANVISA' },
-      { key: 'farmaciapopular', label: 'Farmacia popular' },
-      { key: 'psicotropico', label: 'Psicotropico' },
-      { key: 'retinoico', label: 'Retinoico' },
-      { key: 'usoprolongadosngpc', label: 'Uso prolongado SNGPC' },
-      { key: 'tipotributmedic', label: 'Tipo tribut. medicamento' },
-      { key: 'codsazonalidademed', label: 'Cod. sazonalidade med' },
-      { key: 'codlinhaprazo', label: 'Cod. linha prazo' },
-      { key: 'codprincipativo', label: 'Cod. principio ativo 1' },
-      { key: 'codprincipativo2', label: 'Cod. principio ativo 2' },
-      { key: 'formaesterilizacao', label: 'Forma esterilizacao' },
-      { key: 'codsalmed', label: 'Cod. sais medicamentosos' }
-    ]
-  },
-  {
-    title: 'E-commerce e integracoes',
-    description: 'Campos para canais online',
-    fields: [
-      { key: 'enviaecommerce', label: 'Envia ecommerce' },
-      { key: 'nomeecommerce', label: 'Nome ecommerce' },
-      { key: 'tituloecommerce', label: 'Titulo ecommerce' },
-      { key: 'subtituloecommerce', label: 'Subtitulo ecommerce' },
-      { key: 'diretoriofotos', label: 'Diretorio fotos' },
-      { key: 'exibesemestoqueecommerce', label: 'Exibe sem estoque' },
-      { key: 'codcamplomadee', label: 'Cod. campo loja madee' },
-      { key: 'codadwords', label: 'Cod. adwords' },
-      { key: 'linkid', label: 'Link ID' },
-      { key: 'tipointegracaob2b', label: 'Tipo integracao B2B' },
-      { key: 'usaecommerceunilever', label: 'Usa ecommerce Unilever' },
-      { key: 'embvendaecommerceunilever', label: 'Emb. venda Unilever' },
-      { key: 'utilizaintegracaokibon', label: 'Integracao Kibon' },
-      { key: 'fatorconversaobionexo', label: 'Fator conversao Bionexo' }
-    ]
-  },
-  {
-    title: 'Outros controles e riscos',
-    description: 'Campos diversos de risco e patrimonio',
-    fields: [
-      { key: 'codcor', label: 'Cod. cor' },
-      { key: 'controlapatrimonio', label: 'Controla patrimonio' },
-      { key: 'controladoibama', label: 'Controlado IBAMA' },
-      { key: 'codrisco', label: 'Cod. risco' },
-      { key: 'codonu', label: 'Cod. ONU' },
-      { key: 'codacondicionamento', label: 'Cod. acondicionamento' },
-      { key: 'apto', label: 'Apto' },
-      { key: 'myfrota', label: 'MyFrota' },
-      { key: 'fldselecao', label: 'Campo selecao' }
-    ]
-  }
-];
-const productForm = reactive({
-  id: null,
-  codigo: '',
-  descricao: '',
-  preco: 0,
-  unidade: 'UN',
-  tributacao: '',
-  estoque: 0,
-  categoria: '',
-  winthor_data: {}
-});
-const isEditing = computed(() => productForm.id !== null);
+const productFeedback = reactive({ message: '', type: 'is-primary' });
+const fileInput = ref(null);
 
 // Clientes
 const clients = ref([]);
@@ -870,11 +422,61 @@ const loadProducts = async () => {
   loadingProducts.value = true;
   try {
     products.value = await productService.list(searchTerm.value);
+    productFeedback.message = '';
   } catch (error) {
-    feedback.message = error.response?.data?.error || 'Nao foi possivel carregar os produtos';
-    feedback.type = 'is-danger';
+    productFeedback.message = error.response?.data?.error || 'Nao foi possivel carregar os produtos';
+    productFeedback.type = 'is-danger';
   } finally {
     loadingProducts.value = false;
+  }
+};
+
+const handleSearch = async () => {
+  await loadProducts();
+};
+
+const reloadProducts = () => {
+  loadProducts();
+};
+
+const exportProductsCsv = async () => {
+  exportingProducts.value = true;
+  productFeedback.message = '';
+  try {
+    const blob = await productService.exportCsv();
+    const filename = `produtos-${new Date().toISOString().split('T')[0]}.csv`;
+    triggerDownload(blob, filename);
+    productFeedback.message = 'Catalogo exportado (todos os campos CSV).';
+    productFeedback.type = 'is-success';
+  } catch (error) {
+    productFeedback.message = error.response?.data?.error || 'Nao foi possivel exportar os produtos';
+    productFeedback.type = 'is-danger';
+  } finally {
+    exportingProducts.value = false;
+  }
+};
+
+const triggerImport = () => {
+  fileInput.value?.click();
+};
+
+const handleImportChange = async (event) => {
+  const [file] = event.target.files || [];
+  if (!file) return;
+
+  importingProducts.value = true;
+  productFeedback.message = '';
+  try {
+    await productService.importCsv(file);
+    productFeedback.message = 'Importacao concluida. Catalogo atualizado.';
+    productFeedback.type = 'is-success';
+    await loadProducts();
+  } catch (error) {
+    productFeedback.message = error.response?.data?.error || 'Falha ao importar CSV';
+    productFeedback.type = 'is-danger';
+  } finally {
+    importingProducts.value = false;
+    event.target.value = '';
   }
 };
 
@@ -909,116 +511,6 @@ const loadClientHistory = async (clientId) => {
     clientHistory.value = [];
   } finally {
     loadingHistory.value = false;
-  }
-};
-
-const resetForm = () => {
-  productForm.id = null;
-  productForm.codigo = '';
-  productForm.descricao = '';
-  productForm.preco = 0;
-  productForm.unidade = 'UN';
-  productForm.tributacao = '';
-  productForm.estoque = 0;
-  productForm.categoria = '';
-  productForm.winthor_data = {};
-  feedback.message = '';
-};
-
-const handleSubmit = async () => {
-  saving.value = true;
-  feedback.message = '';
-
-  try {
-  const payload = { ...productForm };
-  payload.winthor_data = { ...productForm.winthor_data };
-  if (isEditing.value) {
-      const updated = await productService.update(productForm.id, payload);
-      products.value = products.value.map(product => product.id === updated.id ? updated : product);
-      feedback.message = 'Produto atualizado com sucesso';
-      feedback.type = 'is-success';
-    } else {
-      const created = await productService.create(payload);
-      products.value = [created, ...products.value];
-      feedback.message = 'Produto cadastrado com sucesso';
-      feedback.type = 'is-success';
-    }
-
-    resetForm();
-  } catch (error) {
-    feedback.message = error.response?.data?.error || 'Erro ao salvar produto';
-    feedback.type = 'is-danger';
-  } finally {
-    saving.value = false;
-  }
-};
-
-const startEdit = (product) => {
-  productForm.id = product.id;
-  productForm.codigo = product.codigo;
-  productForm.descricao = product.descricao;
-  productForm.preco = Number(product.preco);
-  productForm.unidade = product.unidade;
-  productForm.tributacao = product.tributacao;
-  productForm.estoque = product.estoque;
-  productForm.categoria = product.categoria || '';
-  productForm.winthor_data = product.winthor_data || {};
-  feedback.message = '';
-};
-
-const handleSearch = async () => {
-  await loadProducts();
-};
-
-const openWizard = () => {
-  showWizard.value = true;
-  wizardStep.value = 1;
-};
-
-const closeWizard = () => {
-  showWizard.value = false;
-};
-
-const wizardNext = () => {
-  if (wizardStep.value < wizardSections.length) {
-    wizardStep.value += 1;
-  }
-};
-
-const wizardPrev = () => {
-  if (wizardStep.value > 1) {
-    wizardStep.value -= 1;
-  }
-};
-
-const updateWinthorField = (key, value) => {
-  productForm.winthor_data = {
-    ...productForm.winthor_data,
-    [key]: value
-  };
-};
-
-const addCustomField = () => {
-  if (!customFieldKey.value) return;
-  updateWinthorField(customFieldKey.value, customFieldValue.value);
-  customFieldKey.value = '';
-  customFieldValue.value = '';
-};
-
-const handleDelete = async (product) => {
-  if (!confirm(`Deseja remover o produto ${product.codigo}?`)) return;
-  saving.value = true;
-  feedback.message = '';
-  try {
-    await productService.remove(product.id);
-    products.value = products.value.filter(item => item.id !== product.id);
-    feedback.message = 'Produto removido com sucesso';
-    feedback.type = 'is-success';
-  } catch (error) {
-    feedback.message = error.response?.data?.error || 'Erro ao remover produto';
-    feedback.type = 'is-danger';
-  } finally {
-    saving.value = false;
   }
 };
 
@@ -1233,46 +725,9 @@ const formatDateTime = (value) => {
   border-bottom: none;
 }
 
-.wizard-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.wizard-step {
-  padding: 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f9fafb;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.6rem;
-  align-items: center;
-}
-
-.wizard-step.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.wizard-step .step-index {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: #3b82f6;
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-}
-
-.wizard-form {
-  min-height: 240px;
-}
-
 .box.is-light {
   background: #f8fafc;
   border-radius: 10px;
 }
 </style>
+
