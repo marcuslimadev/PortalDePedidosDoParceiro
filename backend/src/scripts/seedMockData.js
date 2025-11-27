@@ -250,7 +250,8 @@ export async function runSeed () {
   console.log('- Clientes: loja1@cliente.com, loja2@cliente.com, loja3@cliente.com (senha cliente123)');
 }
 
-if (import.meta.url === `file://${__filename}`) {
+const isDirectRun = process.argv[1]?.endsWith('seedMockData.js');
+if (import.meta.url === `file://${__filename}` || isDirectRun) {
   runSeed()
     .then(() => {
       console.log('Seed finalizado.');
