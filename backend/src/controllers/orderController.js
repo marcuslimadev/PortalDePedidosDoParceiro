@@ -159,3 +159,48 @@ export const listOrders = async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar pedidos' });
   }
 };
+
+export const updateOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const allowedStatus = ['pendente', 'aprovado', 'cancelado'];
+  if (!allowedStatus.includes(status)) {
+    return res.status(400).json({ error: 'Status inválido' });
+  }
+
+  try {
+    const updatedOrder = await query(
+      `UPDATE orders
+       SET status = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, loja_id, status, payment_terms, observations, total, created_at, updated_at`,
+      [status, id]
+    );
+
+    if (updatedOrder.rowCount === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+
+    const order = updatedOrder.rows[0];
+    const lojaResult = await query('SELECT nome FROM users WHERE id = $1', [order.loja_id]);
+    const itemsResult = await query(
+      `SELECT oi.product_id, oi.quantidade, oi.preco_unitario, oi.subtotal, p.codigo, p.descricao
+       FROM order_items oi
+       JOIN products p ON p.id = oi.product_id
+       WHERE oi.order_id = $1`,
+      [id]
+    );
+
+    res.json({
+      order: {
+        ...order,
+        loja_nome: lojaResult.rows[0]?.nome || null,
+        items: itemsResult.rows
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar status do pedido:', error);
+    res.status(500).json({ error: 'Falha ao atualizar status do pedido' });
+  }
+};
