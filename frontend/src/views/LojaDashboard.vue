@@ -9,6 +9,9 @@
       <div class="navbar-menu">
         <div class="navbar-end">
           <div class="navbar-item">
+            <NotificationBell @notification-click="handleNotificationClick" ref="notificationBell" />
+          </div>
+          <div class="navbar-item">
             <span class="tag is-light">{{ user?.nome }}</span>
           </div>
           <div class="navbar-item">
@@ -255,6 +258,7 @@ import { useRouter } from 'vue-router';
 import { authService } from '../services/api';
 import { productService } from '../services/productService';
 import { orderService } from '../services/orderService';
+import NotificationBell from '../components/NotificationBell.vue';
 
 const router = useRouter();
 const user = ref(null);
@@ -267,6 +271,7 @@ const cart = ref([]);
 const searchTerm = ref('');
 const quantitySelections = reactive({});
 const feedback = reactive({ message: '', type: 'is-primary' });
+const notificationBell = ref(null);
 const orderForm = reactive({
   paymentTerms: '30',
   observations: ''
@@ -286,6 +291,13 @@ onMounted(() => {
 const handleLogout = () => {
   authService.logout();
   router.push('/');
+};
+
+const handleNotificationClick = (notification) => {
+  if (notification.order_id) {
+    // Could scroll to or highlight the order in the list
+    console.log('Notification clicked for order:', notification.order_id);
+  }
 };
 
 const loadProducts = async () => {
