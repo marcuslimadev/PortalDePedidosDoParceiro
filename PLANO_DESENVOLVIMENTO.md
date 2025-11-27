@@ -21,7 +21,7 @@
 - [x] Recuperação de senha
 - [x] Autenticação 2FA (opcional)
 
-## 3. Gestão de Produtos (11/12 - 92%)
+## 3. Gestão de Produtos (12/12 - 100%)
 - [x] Modelo de dados: produtos (código, descrição, preço, unidade, tributação)
 - [x] CRUD de produtos (backend)
 - [x] Upload e galeria de fotos por produto
@@ -34,6 +34,7 @@
 - [x] Controle de estoque básico
 - [x] Categorização de produtos
 - [x] API pública de catálogo para lojas
+- [x] Importação/Exportação CSV com todos os campos (winthor_data)
 
 ## 4. Gestão de Clientes (10/10 - 100%)
 - [x] Modelo de dados: clientes (CNPJ, IE, rota, segmentação Winthor)
@@ -117,7 +118,7 @@
 |--------|-----------|--------|
 | Infraestrutura & Base | 5/5 (100%) | ✅ Completo |
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
-| Gestão de Produtos | 11/12 (92%) | 🟡 Em andamento |
+| Gestão de Produtos | 12/12 (100%) | ✅ Completo |
 | Gestão de Clientes | 10/10 (100%) | ✅ Completo |
 | Sistema de Pedidos | 13/15 (87%) | 🟡 Em andamento |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
@@ -126,7 +127,7 @@
 | Segurança & Compliance | 2/7 (29%) | 🟡 Em andamento |
 | DevOps & Qualidade | 2/5 (40%) | 🟡 Em andamento |
 
-**Total Geral: 57/85 funcionalidades (67%)**
+**Total Geral: 58/85 funcionalidades (68%)**
 
 ---
 

@@ -176,3 +176,146 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ error: 'Erro ao remover produto' });
   }
 };
+
+const baseCsvFields = ['codigo', 'descricao', 'preco', 'unidade', 'tributacao', 'estoque', 'categoria'];
+
+const toCsvValue = (value) => {
+  if (value === null || value === undefined) return '';
+  const str = String(value).replace(/"/g, '""');
+  if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+    return `"${str}"`;
+  }
+  return str;
+};
+
+export const exportProductsCsv = async (req, res) => {
+  try {
+    const result = await query('SELECT codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data FROM products ORDER BY updated_at DESC');
+    const rows = result.rows;
+    if (rows.length === 0) {
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=produtos.csv');
+      return res.send(baseCsvFields.join(';'));
+    }
+
+    const extraKeys = new Set();
+    rows.forEach(row => {
+      const data = row.winthor_data || {};
+      Object.keys(data).forEach(k => extraKeys.add(k));
+    });
+    const header = [...baseCsvFields, ...Array.from(extraKeys)];
+
+    const csv = [
+      header.join(';'),
+      ...rows.map(row => {
+        const data = row.winthor_data || {};
+        return header.map(key => {
+          if (baseCsvFields.includes(key)) {
+            return toCsvValue(row[key]);
+          }
+          return toCsvValue(data[key]);
+        }).join(';');
+      })
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=produtos-${Date.now()}.csv`);
+    res.send('\ufeff' + csv);
+  } catch (error) {
+    console.error('Erro ao exportar produtos:', error);
+    res.status(500).json({ error: 'Não foi possível exportar produtos' });
+  }
+};
+
+export const importProductsCsv = async (req, res) => {
+  try {
+    const { csv } = req.body;
+    if (!csv) {
+      return res.status(400).json({ error: 'CSV não enviado' });
+    }
+
+    const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+    if (lines.length === 0) {
+      return res.status(400).json({ error: 'CSV vazio' });
+    }
+
+    const header = lines[0].split(';').map(h => h.trim());
+    const created = [];
+    const updated = [];
+    let errors = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+      const cols = line.split(';');
+      const record = {};
+      header.forEach((key, idx) => {
+        record[key] = cols[idx] !== undefined ? cols[idx].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+      });
+
+      const payload = {
+        codigo: record.codigo,
+        descricao: record.descricao,
+        preco: record.preco ? Number(record.preco) : 0,
+        unidade: record.unidade || 'UN',
+        tributacao: record.tributacao || 'ICMS',
+        estoque: record.estoque ? Number(record.estoque) : 0,
+        categoria: record.categoria || null,
+        winthor_data: {}
+      };
+
+      header.forEach(key => {
+        if (!baseCsvFields.includes(key)) {
+          payload.winthor_data[key] = record[key] || '';
+        }
+      });
+
+      try {
+        const existing = await query('SELECT id FROM products WHERE codigo = $1', [payload.codigo]);
+        if (existing.rows.length > 0) {
+          await query(
+            `UPDATE products
+               SET descricao = $1, preco = $2, unidade = $3, tributacao = $4,
+                   estoque = $5, categoria = $6, winthor_data = $7, updated_at = NOW()
+             WHERE codigo = $8`,
+            [
+              payload.descricao,
+              payload.preco,
+              payload.unidade,
+              payload.tributacao,
+              payload.estoque,
+              payload.categoria,
+              payload.winthor_data,
+              payload.codigo
+            ]
+          );
+          updated.push(payload.codigo);
+        } else {
+          await query(
+            `INSERT INTO products (codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [
+              payload.codigo,
+              payload.descricao,
+              payload.preco,
+              payload.unidade,
+              payload.tributacao,
+              payload.estoque,
+              payload.categoria,
+              payload.winthor_data
+            ]
+          );
+          created.push(payload.codigo);
+        }
+      } catch (err) {
+        console.error(`Erro ao importar linha ${i + 1} (${payload.codigo}):`, err);
+        errors += 1;
+      }
+    }
+
+    res.json({ message: 'Importação concluída', created, updated, errors });
+  } catch (error) {
+    console.error('Erro ao importar produtos:', error);
+    res.status(500).json({ error: 'Não foi possível importar produtos' });
+  }
+};
