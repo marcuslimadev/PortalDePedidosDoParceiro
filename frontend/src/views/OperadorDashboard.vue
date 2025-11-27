@@ -106,6 +106,7 @@
                       <th class="has-text-right">Valor</th>
                       <th>Status</th>
                       <th>Data</th>
+                      <th class="has-text-centered">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -125,9 +126,34 @@
                         <span class="tag" :class="statusClass(order.status)">{{ order.status }}</span>
                       </td>
                       <td class="is-size-7">{{ formatDate(order.created_at) }}</td>
+                      <td class="has-text-centered">
+                        <div class="buttons are-small is-centered">
+                          <button
+                            class="button is-success is-light"
+                            :disabled="order.status === 'aprovado' || isUpdating(order.id)"
+                            :class="{ 'is-loading': isUpdating(order.id) && targetStatus[order.id] === 'aprovado' }"
+                            @click="updateStatus(order, 'aprovado')"
+                          >
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                          </button>
+                          <button
+                            class="button is-danger is-light"
+                            :disabled="order.status === 'cancelado' || isUpdating(order.id)"
+                            :class="{ 'is-loading': isUpdating(order.id) && targetStatus[order.id] === 'cancelado' }"
+                            @click="updateStatus(order, 'cancelado')"
+                          >
+                            <span class="icon"><i class="fas fa-times"></i></span>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
+                <article v-if="feedback.message" class="message mt-3" :class="feedback.type">
+                  <div class="message-body">
+                    {{ feedback.message }}
+                  </div>
+                </article>
               </div>
             </div>
           </div>
@@ -169,7 +195,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/api';
 import { orderService } from '../services/orderService';
@@ -178,6 +204,9 @@ const router = useRouter();
 const user = ref(null);
 const orders = ref([]);
 const loading = ref(false);
+const updatingStatus = reactive({});
+const targetStatus = reactive({});
+const feedback = reactive({ message: '', type: 'is-success' });
 
 onMounted(() => {
   user.value = authService.getUser();
@@ -198,8 +227,37 @@ const loadOrders = async () => {
     orders.value = await orderService.list();
   } catch (error) {
     console.error('Erro ao carregar pedidos', error);
+    feedback.message = error.response?.data?.error || 'Falha ao carregar pedidos';
+    feedback.type = 'is-danger';
   } finally {
     loading.value = false;
+  }
+};
+
+const isUpdating = (orderId) => updatingStatus[orderId] === true;
+
+const updateStatus = async (order, status) => {
+  updatingStatus[order.id] = true;
+  targetStatus[order.id] = status;
+  feedback.message = '';
+
+  try {
+    const updated = await orderService.updateStatus(order.id, status);
+    const index = orders.value.findIndex(o => o.id === order.id);
+    if (index !== -1) {
+      orders.value.splice(index, 1, updated);
+    }
+    feedback.message = status === 'aprovado'
+      ? `Pedido #${order.id} aprovado.`
+      : `Pedido #${order.id} cancelado.`;
+    feedback.type = status === 'aprovado' ? 'is-success' : 'is-danger';
+  } catch (error) {
+    console.error('Erro ao atualizar status', error);
+    feedback.message = error.response?.data?.error || 'Não foi possível atualizar o status';
+    feedback.type = 'is-danger';
+  } finally {
+    updatingStatus[order.id] = false;
+    targetStatus[order.id] = null;
   }
 };
 

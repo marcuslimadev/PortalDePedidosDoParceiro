@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 52% concluído (44/85 funcionalidades)
+## 📊 Status do Projeto: 55% concluído (47/85 funcionalidades)
 
 ---
 
@@ -47,7 +47,7 @@
 - [x] Validação de CNPJ/IE
 - [ ] Status do cliente (ativo/inativo/bloqueado)
 
-## 5. Sistema de Pedidos (5/15 - 33%)
+## 5. Sistema de Pedidos (8/15 - 53%)
 - [x] Modelo de dados: pedidos, itens_pedido
 - [x] API de criação de pedido
 - [x] Carrinho de compras (frontend)
@@ -56,10 +56,10 @@
 - [ ] Aplicação de condições de pagamento
 - [x] Interface de pedidos para lojas
 - [ ] Funcionalidade "Repetir pedido anterior"
-- [ ] Acompanhamento de status do pedido
+- [x] Acompanhamento de status do pedido
 - [ ] Histórico completo de pedidos
-- [ ] Cancelamento de pedidos
-- [ ] Aprovação de pedidos (workflow)
+- [x] Cancelamento de pedidos
+- [x] Aprovação de pedidos (workflow)
 - [ ] Exportação de pedidos para Excel
 - [ ] Notificações de status (email/sistema)
 - [ ] Dashboard de pedidos em aberto
@@ -119,14 +119,14 @@
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
 | Gestão de Produtos | 10/12 (83%) | 🟡 Em andamento |
 | Gestão de Clientes | 5/10 (50%) | 🟡 Em andamento |
-| Sistema de Pedidos | 5/15 (33%) | 🟡 Em andamento |
+| Sistema de Pedidos | 8/15 (53%) | 🟡 Em andamento |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
 | Relatórios & Analytics | 2/9 (22%) | 🟡 Em andamento |
 | UX & Mobile | 3/6 (50%) | 🟡 Em andamento |
 | Segurança & Compliance | 2/7 (29%) | 🟡 Em andamento |
 | DevOps & Qualidade | 2/5 (40%) | 🟡 Em andamento |
 
-**Total Geral: 44/85 funcionalidades (52%)**
+**Total Geral: 47/85 funcionalidades (55%)**
 
 ---
 
