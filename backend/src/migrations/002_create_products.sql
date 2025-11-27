@@ -26,7 +26,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_products_updated_at
-BEFORE UPDATE ON products
-FOR EACH ROW
-EXECUTE FUNCTION update_products_updated_at();
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_products_updated_at') THEN
+    CREATE TRIGGER trg_products_updated_at
+    BEFORE UPDATE ON products
+    FOR EACH ROW
+    EXECUTE FUNCTION update_products_updated_at();
+  END IF;
+END $$;
