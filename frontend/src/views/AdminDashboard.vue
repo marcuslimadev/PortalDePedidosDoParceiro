@@ -139,6 +139,10 @@
                 <span class="icon"><i class="fas" :class="isEditing ? 'fa-save' : 'fa-plus-circle'"></i></span>
                 <span>{{ isEditing ? 'Salvar alteracoes' : 'Cadastrar produto' }}</span>
               </button>
+              <button type="button" class="button is-link is-light" @click="openWizard" :disabled="saving">
+                <span class="icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+                <span>Ficha Winthor (wizard)</span>
+              </button>
               <button type="button" class="button is-light" @click="resetForm" :disabled="saving">
                 Limpar
               </button>
@@ -396,6 +400,57 @@
         </div>
       </div>
     </section>
+
+    <div class="modal" :class="{ 'is-active': showWizard }">
+      <div class="modal-background" @click="closeWizard"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Wizard Winthor</p>
+          <button class="delete" aria-label="close" @click="closeWizard"></button>
+        </header>
+        <section class="modal-card-body">
+          <div class="wizard-steps">
+            <div
+              v-for="(section, index) in wizardSections"
+              :key="section.title"
+              class="wizard-step"
+              :class="{ active: wizardStep === index + 1 }"
+            >
+              <span class="step-index">{{ index + 1 }}</span>
+              <div>
+                <p class="is-size-6 has-text-weight-semibold">{{ section.title }}</p>
+                <p class="is-size-7 has-text-grey">{{ section.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-form">
+            <div v-for="(section, index) in wizardSections" :key="section.title" v-show="wizardStep === index + 1">
+              <div class="columns is-multiline">
+                <div v-for="field in section.fields" :key="field.key" class="column is-6">
+                  <label class="label">{{ field.label }}</label>
+                  <input
+                    class="input"
+                    :value="productForm.winthor_data?.[field.key] || ''"
+                    @input="updateWinthorField(field.key, $event.target.value)"
+                    :placeholder="field.label"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer class="modal-card-foot is-justify-content-space-between">
+          <div>
+            <button class="button" @click="wizardPrev" :disabled="wizardStep === 1">Voltar</button>
+            <button class="button is-link" @click="wizardNext" :disabled="wizardStep === wizardSections.length">Proximo</button>
+          </div>
+          <div>
+            <button class="button is-primary" @click="closeWizard">Concluir</button>
+          </div>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -416,6 +471,62 @@ const loadingProducts = ref(false);
 const saving = ref(false);
 const searchTerm = ref('');
 const feedback = reactive({ message: '', type: 'is-primary' });
+const showWizard = ref(false);
+const wizardStep = ref(1);
+const wizardSections = [
+  {
+    title: 'Identificacao e Classificacao',
+    description: 'Dados principais do produto no Winthor',
+    fields: [
+      { key: 'codfornec', label: 'Cod. Fornecedor' },
+      { key: 'fornecedor', label: 'Fornecedor' },
+      { key: 'codepto', label: 'Cod. Depto' },
+      { key: 'codsec', label: 'Cod. Secao' },
+      { key: 'codmarca', label: 'Cod. Marca' },
+      { key: 'codcategoria', label: 'Cod. Categoria' },
+      { key: 'codlinhaprod', label: 'Cod. Linha Prod.' },
+      { key: 'tipomerc', label: 'Tipo Merc.' },
+      { key: 'naturezaproduto', label: 'Natureza Produto' },
+      { key: 'status', label: 'Status' }
+    ]
+  },
+  {
+    title: 'Embalagens e Fiscal',
+    description: 'Unidades, pesos e dados fiscais',
+    fields: [
+      { key: 'embalagem', label: 'Embalagem' },
+      { key: 'unidade', label: 'Unidade Padrao' },
+      { key: 'qtunit', label: 'Qtde Unidade' },
+      { key: 'embalagemmaster', label: 'Embalagem Master' },
+      { key: 'unidademaster', label: 'Unidade Master' },
+      { key: 'qtunitcx', label: 'Qtde Unit CX' },
+      { key: 'pesoliq', label: 'Peso Liquido' },
+      { key: 'pesobruto', label: 'Peso Bruto' },
+      { key: 'codncmex', label: 'NCM' },
+      { key: 'nbm', label: 'NBM' },
+      { key: 'extipi', label: 'EXTIPI' },
+      { key: 'gtincodauxiliar', label: 'GTIN Auxiliar' },
+      { key: 'codaauxiliar', label: 'Cod. Auxiliar' },
+      { key: 'codaauxiliartrib', label: 'Cod. Auxiliar Trib.' }
+    ]
+  },
+  {
+    title: 'Complementos e Referencias',
+    description: 'Relacionamentos e observacoes',
+    fields: [
+      { key: 'codfab', label: 'Cod. Fabricante' },
+      { key: 'codprodmaster', label: 'Cod. Produto Master' },
+      { key: 'codprodprinc', label: 'Cod. Produto Principal' },
+      { key: 'codsubmarca', label: 'Cod. Submarca' },
+      { key: 'unidadepadrao', label: 'Unidade Padrao' },
+      { key: 'informacoestecnicas', label: 'Informacoes Tecnicas' },
+      { key: 'dadosTecnicos', label: 'Dados Tecnicos' },
+      { key: 'codprodfornec', label: 'Cod. Produto Fornec.' },
+      { key: 'codinfnutri', label: 'Cod. Info Nutricional' },
+      { key: 'obs', label: 'Observacoes' }
+    ]
+  }
+];
 const productForm = reactive({
   id: null,
   codigo: '',
@@ -424,7 +535,8 @@ const productForm = reactive({
   unidade: 'UN',
   tributacao: '',
   estoque: 0,
-  categoria: ''
+  categoria: '',
+  winthor_data: {}
 });
 const isEditing = computed(() => productForm.id !== null);
 
@@ -524,6 +636,7 @@ const resetForm = () => {
   productForm.tributacao = '';
   productForm.estoque = 0;
   productForm.categoria = '';
+  productForm.winthor_data = {};
   feedback.message = '';
 };
 
@@ -532,8 +645,9 @@ const handleSubmit = async () => {
   feedback.message = '';
 
   try {
-    const payload = { ...productForm };
-    if (isEditing.value) {
+  const payload = { ...productForm };
+  payload.winthor_data = { ...productForm.winthor_data };
+  if (isEditing.value) {
       const updated = await productService.update(productForm.id, payload);
       products.value = products.value.map(product => product.id === updated.id ? updated : product);
       feedback.message = 'Produto atualizado com sucesso';
@@ -563,11 +677,40 @@ const startEdit = (product) => {
   productForm.tributacao = product.tributacao;
   productForm.estoque = product.estoque;
   productForm.categoria = product.categoria || '';
+  productForm.winthor_data = product.winthor_data || {};
   feedback.message = '';
 };
 
 const handleSearch = async () => {
   await loadProducts();
+};
+
+const openWizard = () => {
+  showWizard.value = true;
+  wizardStep.value = 1;
+};
+
+const closeWizard = () => {
+  showWizard.value = false;
+};
+
+const wizardNext = () => {
+  if (wizardStep.value < wizardSections.length) {
+    wizardStep.value += 1;
+  }
+};
+
+const wizardPrev = () => {
+  if (wizardStep.value > 1) {
+    wizardStep.value -= 1;
+  }
+};
+
+const updateWinthorField = (key, value) => {
+  productForm.winthor_data = {
+    ...productForm.winthor_data,
+    [key]: value
+  };
 };
 
 const handleDelete = async (product) => {
@@ -796,5 +939,43 @@ const formatDateTime = (value) => {
 
 .history-item:last-child {
   border-bottom: none;
+}
+
+.wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.wizard-step {
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.wizard-step.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.wizard-step .step-index {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #3b82f6;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.wizard-form {
+  min-height: 240px;
 }
 </style>

@@ -19,7 +19,7 @@ export const listProducts = async (req, res) => {
   try {
     const { q } = req.query;
     const params = [];
-    let sql = 'SELECT id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, created_at, updated_at FROM products';
+    let sql = 'SELECT id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data, created_at, updated_at FROM products';
 
     if (q) {
       params.push(`%${q.toLowerCase()}%`);
@@ -41,7 +41,7 @@ export const listPublicCatalog = async (req, res) => {
     const { q } = req.query;
     const params = [];
     let sql = `
-      SELECT id, codigo, descricao, preco, unidade, tributacao, estoque, categoria
+      SELECT id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data
       FROM products`;
 
     if (q) {
@@ -66,7 +66,8 @@ export const createProduct = async (req, res) => {
       return res.status(400).json({ error: validationError });
     }
 
-    const { codigo, descricao, preco, unidade, tributacao, estoque = 0, categoria = null } = req.body;
+    const { codigo, descricao, preco, unidade, tributacao, estoque = 0, categoria = null, winthor_data: winthorData = {} } = req.body;
+    const safeWinthor = typeof winthorData === 'object' && winthorData !== null ? winthorData : {};
 
     const duplicate = await query('SELECT id FROM products WHERE codigo = $1', [codigo]);
     if (duplicate.rows.length > 0) {
@@ -74,10 +75,10 @@ export const createProduct = async (req, res) => {
     }
 
     const result = await query(
-      `INSERT INTO products (codigo, descricao, preco, unidade, tributacao, estoque, categoria)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, created_at, updated_at`,
-      [codigo, descricao, preco, unidade, tributacao, estoque, categoria]
+      `INSERT INTO products (codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data, created_at, updated_at`,
+      [codigo, descricao, preco, unidade, tributacao, estoque, categoria, safeWinthor]
     );
 
     res.status(201).json({ product: result.rows[0] });
@@ -95,7 +96,8 @@ export const updateProduct = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { codigo, descricao, preco, unidade, tributacao, estoque = 0, categoria = null } = req.body;
+    const { codigo, descricao, preco, unidade, tributacao, estoque = 0, categoria = null, winthor_data: winthorData = {} } = req.body;
+    const safeWinthor = typeof winthorData === 'object' && winthorData !== null ? winthorData : {};
 
     const existing = await query('SELECT id, preco FROM products WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
@@ -116,10 +118,11 @@ export const updateProduct = async (req, res) => {
         tributacao = $5,
         estoque = $6,
         categoria = $7,
-        updated_at = NOW()
-      WHERE id = $8
-      RETURNING id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, created_at, updated_at`,
-      [codigo, descricao, preco, unidade, tributacao, estoque, categoria, id]
+        updated_at = NOW(),
+        winthor_data = $8
+      WHERE id = $9
+      RETURNING id, codigo, descricao, preco, unidade, tributacao, estoque, categoria, winthor_data, created_at, updated_at`,
+      [codigo, descricao, preco, unidade, tributacao, estoque, categoria, safeWinthor, id]
     );
 
     const previousPrice = existing.rows[0].preco;
