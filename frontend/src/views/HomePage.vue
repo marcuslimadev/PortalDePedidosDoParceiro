@@ -196,7 +196,7 @@ import { ref, computed } from 'vue';
 
 // Project progress tracking alinhado ao plano atual (PLANO_DESENVOLVIMENTO.md)
 const totalFeatures = ref(85);
-const completedFeatures = ref(48);
+const completedFeatures = ref(57);
 const projectProgress = computed(() => Math.round((completedFeatures.value / totalFeatures.value) * 100));
 
 const moduleStatus = computed(() => [
@@ -218,17 +218,17 @@ const moduleStatus = computed(() => [
   },
   {
     name: 'Gestão de Clientes',
-    done: 5,
+    done: 10,
     total: 10,
-    label: 'Em andamento',
-    progressClass: 'is-warning',
-    tagClass: 'is-warning'
+    label: 'Completo',
+    progressClass: 'is-success',
+    tagClass: 'is-success'
   },
   {
     name: 'Sistema de Pedidos',
-    done: 8,
+    done: 12,
     total: 15,
-    label: 'Aprovação e cancelamento ativos',
+    label: 'Histórico e aprovação ativos',
     progressClass: 'is-primary',
     tagClass: 'is-primary'
   },
