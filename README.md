@@ -29,17 +29,18 @@ cp .env.example .env
 npm run dev
 ```
 
-Endpoints disponíveis:
-- `GET /` → teste rápido
-- `GET /api/health` → verifica conexão com o Postgres (necessita banco configurado)
-- `GET /api/catalog` → catálogo público de produtos com busca opcional
-- `GET /api/clients` → (admin/operador) lista lojas com limites e status operacionais
-- `GET /api/clients/:id` → (admin/operador) detalhes de um cliente específico
-- `PUT /api/clients/:id` → (admin/operador) atualiza CNPJ, rota, segmentação, limite e prazos
-- `POST /api/orders` → (loja) agora valida limite de crédito e status do cliente antes de registrar
-- `POST /api/orders/:id/repeat` → (loja) replica automaticamente os itens de um pedido anterior
-- `GET /api/orders/export/csv` → (admin/operador) gera arquivo CSV com os pedidos mais recentes
-
+Endpoints disponiveis:
+- `GET /` - teste rapido
+- `GET /api/health` - verifica conexao com o Postgres (necessita banco configurado)
+- `GET /api/catalog` - catalogo publico de produtos com busca opcional
+- `GET /api/clients` - (admin/operador) lista lojas com limites e status operacionais
+- `GET /api/clients/:id` - (admin/operador) detalhes de um cliente especifico
+- `PUT /api/clients/:id` - (admin/operador) atualiza CNPJ, rota, segmentacao, limite e prazos
+- `PUT /api/clients/:id/access` - (admin/operador) cria/atualiza acesso do cliente ao portal com senha temporaria
+- `POST /api/orders` - (loja) valida limite de credito e status do cliente antes de registrar
+- `POST /api/orders/:id/repeat` - (loja) replica automaticamente os itens de um pedido anterior
+- `GET /api/orders` - lista pedidos com paginacao, filtro por status/data e meta de historico
+- `GET /api/orders/export/csv` - (admin/operador) gera arquivo CSV com os pedidos mais recentes
 ### Frontend
 
 ```powershell

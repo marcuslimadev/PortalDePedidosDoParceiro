@@ -3,7 +3,7 @@ import api from './api';
 export const orderService = {
   async list(params = {}) {
     const response = await api.get('/orders', { params });
-    return response.data.orders;
+    return response.data;
   },
 
   async create(payload) {

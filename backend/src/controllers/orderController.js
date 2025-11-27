@@ -162,14 +162,15 @@ export const listOrders = async (req, res) => {
     const isLoja = req.user.role === 'loja';
     const params = [];
     const filters = [];
+
     const limitParam = Number(req.query.limit) || 50;
     const limit = Math.min(Math.max(limitParam, 1), 500);
+    const pageParam = Number(req.query.page) || 1;
+    const page = Math.max(pageParam, 1);
+    const offset = (page - 1) * limit;
     const statusFilter = req.query.status;
-    let baseQuery = `
-      SELECT o.id, o.loja_id, o.status, o.payment_terms, o.observations, o.total, o.created_at, o.updated_at,
-             u.nome AS loja_nome
-      FROM orders o
-      JOIN users u ON u.id = o.loja_id`;
+    const fromDate = req.query.from;
+    const toDate = req.query.to;
 
     if (isLoja) {
       params.push(req.user.id);
@@ -181,18 +182,37 @@ export const listOrders = async (req, res) => {
       filters.push(`o.status = $${params.length}`);
     }
 
-    if (filters.length > 0) {
-      baseQuery += ' WHERE ' + filters.join(' AND ');
+    if (fromDate) {
+      params.push(fromDate);
+      filters.push(`o.created_at >= $${params.length}`);
     }
 
-    params.push(limit);
-    baseQuery += ` ORDER BY o.created_at DESC LIMIT $${params.length}`;
+    if (toDate) {
+      params.push(toDate);
+      filters.push(`o.created_at <= $${params.length}`);
+    }
+
+    const baseQuery = `
+      WITH filtered AS (
+        SELECT o.id, o.loja_id, o.status, o.payment_terms, o.observations, o.total, o.created_at, o.updated_at,
+               u.nome AS loja_nome
+          FROM orders o
+          JOIN users u ON u.id = o.loja_id
+         ${filters.length ? 'WHERE ' + filters.join(' AND ') : ''}
+         ORDER BY o.created_at DESC
+      )
+      SELECT *, COUNT(*) OVER() AS total_count
+        FROM filtered
+       LIMIT $${params.length + 1}
+      OFFSET $${params.length + 2}`;
+
+    params.push(limit, offset);
 
     const ordersResult = await query(baseQuery, params);
     const orders = ordersResult.rows;
 
     if (orders.length === 0) {
-      return res.json({ orders: [] });
+      return res.json({ orders: [], meta: { total: 0, page, pages: 0, limit } });
     }
 
     const orderIds = orders.map(order => order.id);
@@ -211,12 +231,23 @@ export const listOrders = async (req, res) => {
       return acc;
     }, {});
 
+    const total = Number(orders[0]?.total_count) || 0;
+    const pages = total === 0 ? 0 : Math.max(1, Math.ceil(total / limit));
+
     const response = orders.map(order => ({
       ...order,
       items: itemsByOrder[order.id] || []
     }));
 
-    res.json({ orders: response });
+    res.json({
+      orders: response,
+      meta: {
+        total,
+        page,
+        pages,
+        limit
+      }
+    });
   } catch (error) {
     console.error('Erro ao listar pedidos:', error);
     res.status(500).json({ error: 'Erro ao buscar pedidos' });

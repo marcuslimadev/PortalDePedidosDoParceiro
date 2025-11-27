@@ -263,6 +263,12 @@
                     </tr>
                   </tbody>
                 </table>
+                <div v-if="canLoadMoreOrders" class="has-text-centered mt-3">
+                  <button class="button is-light is-small" :disabled="loading" @click="loadOrders(false)">
+                    <span class="icon"><i class="fas fa-chevron-down"></i></span>
+                    <span>Carregar mais pedidos</span>
+                  </button>
+                </div>
                 <article v-if="feedback.message" class="message mt-3" :class="feedback.type">
                   <div class="message-body">
                     {{ feedback.message }}
@@ -317,6 +323,7 @@ import { orderService } from '../services/orderService';
 const router = useRouter();
 const user = ref(null);
 const orders = ref([]);
+const ordersMeta = ref({ total: 0, page: 1, pages: 1, limit: 200 });
 const loading = ref(false);
 const downloadingExport = ref(false);
 const updatingStatus = reactive({});
@@ -355,10 +362,26 @@ const handleLogout = () => {
   router.push('/');
 };
 
-const loadOrders = async () => {
+const loadOrders = async (reset = true) => {
   loading.value = true;
   try {
-    orders.value = await orderService.list({ limit: 200 });
+    const nextPage = reset ? 1 : ordersMeta.value.page + 1;
+    const { orders: fetched, meta } = await orderService.list({ limit: ordersMeta.value.limit, page: nextPage });
+    ordersMeta.value = meta || ordersMeta.value;
+    if (reset) {
+      orders.value = fetched || [];
+    } else {
+      const merged = [...orders.value];
+      (fetched || []).forEach(item => {
+        const idx = merged.findIndex(o => o.id === item.id);
+        if (idx >= 0) {
+          merged.splice(idx, 1, item);
+        } else {
+          merged.push(item);
+        }
+      });
+      orders.value = merged;
+    }
   } catch (error) {
     console.error('Erro ao carregar pedidos', error);
     feedback.message = error.response?.data?.error || 'Falha ao carregar pedidos';
@@ -367,6 +390,8 @@ const loadOrders = async () => {
     loading.value = false;
   }
 };
+
+const canLoadMoreOrders = computed(() => orders.value.length < (ordersMeta.value.total || 0));
 
 const loadOpenSummary = async (silent = false) => {
   if (!silent) {

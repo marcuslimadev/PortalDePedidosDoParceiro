@@ -250,6 +250,12 @@
                     </div>
                   </div>
                 </article>
+                <div v-if="canLoadMoreOrders" class="has-text-centered mt-3">
+                  <button class="button is-light is-small" :disabled="loadingOrders" @click="loadOrders(false)">
+                    <span class="icon"><i class="fas fa-chevron-down"></i></span>
+                    <span>Carregar mais</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -273,6 +279,7 @@ const loadingProducts = ref(false);
 const loadingOrders = ref(false);
 const saving = ref(false);
 const orders = ref([]);
+const ordersMeta = ref({ total: 0, page: 1, pages: 1, limit: 100 });
 const repeatingOrderId = ref(null);
 const cart = ref([]);
 const searchTerm = ref('');
@@ -392,10 +399,26 @@ const submitOrder = async () => {
   }
 };
 
-const loadOrders = async () => {
+const loadOrders = async (reset = true) => {
   loadingOrders.value = true;
   try {
-    orders.value = await orderService.list({ limit: 100 });
+    const nextPage = reset ? 1 : ordersMeta.value.page + 1;
+    const { orders: fetched, meta } = await orderService.list({ limit: ordersMeta.value.limit, page: nextPage });
+    ordersMeta.value = meta || ordersMeta.value;
+    if (reset) {
+      orders.value = fetched || [];
+    } else {
+      const merged = [...orders.value];
+      (fetched || []).forEach(item => {
+        const idx = merged.findIndex(o => o.id === item.id);
+        if (idx >= 0) {
+          merged.splice(idx, 1, item);
+        } else {
+          merged.push(item);
+        }
+      });
+      orders.value = merged;
+    }
   } catch (error) {
     feedback.message = error.response?.data?.error || 'Falha ao carregar pedidos';
     feedback.type = 'is-danger';
@@ -403,6 +426,8 @@ const loadOrders = async () => {
     loadingOrders.value = false;
   }
 };
+
+const canLoadMoreOrders = computed(() => orders.value.length < (ordersMeta.value.total || 0));
 
 const subscribeToOrderStream = () => {
   const token = localStorage.getItem('token');

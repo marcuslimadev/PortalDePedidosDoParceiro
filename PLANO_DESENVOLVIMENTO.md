@@ -35,19 +35,19 @@
 - [x] Categorização de produtos
 - [x] API pública de catálogo para lojas
 
-## 4. Gestão de Clientes (9/10 - 90%)
+## 4. Gestão de Clientes (10/10 - 100%)
 - [x] Modelo de dados: clientes (CNPJ, IE, rota, segmentação Winthor)
 - [x] CRUD de clientes (backend)
 - [x] Campos padrão Winthor obrigatórios
 - [x] Interface de cadastro de clientes (Admin)
 - [x] Gestão de limites de crédito por cliente
 - [x] Prazos de pagamento personalizados (30/60/90)
-- [ ] Associação cliente-usuário portal
+- [x] Associação cliente-usuário portal
 - [x] Histórico de limites e alterações
 - [x] Validação de CNPJ/IE
 - [x] Status do cliente (ativo/inativo/bloqueado)
 
-## 5. Sistema de Pedidos (11/15 - 73%)
+## 5. Sistema de Pedidos (12/15 - 80%)
 - [x] Modelo de dados: pedidos, itens_pedido
 - [x] API de criação de pedido
 - [x] Carrinho de compras (frontend)
@@ -57,7 +57,7 @@
 - [x] Interface de pedidos para lojas
 - [x] Funcionalidade "Repetir pedido anterior"
 - [x] Acompanhamento de status do pedido
-- [ ] Histórico completo de pedidos
+- [x] Histórico completo de pedidos
 - [x] Cancelamento de pedidos
 - [x] Aprovação de pedidos (workflow)
 - [x] Exportação de pedidos para Excel
@@ -118,24 +118,23 @@
 | Infraestrutura & Base | 5/5 (100%) | ✅ Completo |
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
 | Gestão de Produtos | 11/12 (92%) | 🟡 Em andamento |
-| Gestão de Clientes | 9/10 (90%) | 🟢 Quase lá |
-| Sistema de Pedidos | 11/15 (73%) | 🟡 Em andamento |
+| Gestão de Clientes | 10/10 (100%) | ✅ Completo |
+| Sistema de Pedidos | 12/15 (80%) | 🟡 Em andamento |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
 | Relatórios & Analytics | 2/9 (22%) | 🟡 Em andamento |
 | UX & Mobile | 3/6 (50%) | 🟡 Em andamento |
 | Segurança & Compliance | 2/7 (29%) | 🟡 Em andamento |
 | DevOps & Qualidade | 2/5 (40%) | 🟡 Em andamento |
 
-**Total Geral: 55/85 funcionalidades (65%)**
+**Total Geral: 57/85 funcionalidades (67%)**
 
 ---
 
 ## 🎯 Próximas Prioridades (Sprint 1)
 
-1. **Sistema de Pedidos** - notificações, dashboard em aberto e histórico completo
-2. **Gestão de Clientes** - associação cliente-usuário portal
-3. **Relatórios & Analytics** - começar curvas ABC e dashboards
-4. **Segurança & Compliance** - rate limiting, auditoria e backup
+1. **Sistema de Pedidos** - notificações e dashboard em aberto
+2. **Relatórios & Analytics** - começar curvas ABC e dashboards
+3. **Segurança & Compliance** - rate limiting, auditoria e backup
 
 ## 📅 Roadmap Estimado
 
