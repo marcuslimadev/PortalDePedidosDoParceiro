@@ -9,6 +9,9 @@
       <div class="navbar-menu">
         <div class="navbar-end">
           <div class="navbar-item">
+            <NotificationBell @notification-click="handleNotificationClick" ref="notificationBell" />
+          </div>
+          <div class="navbar-item">
             <span class="tag is-light">{{ user?.nome }}</span>
           </div>
           <div class="navbar-item">
@@ -206,6 +209,7 @@ import { ref, onMounted, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/api';
 import { productService } from '../services/productService';
+import NotificationBell from '../components/NotificationBell.vue';
 
 const router = useRouter();
 const user = ref(null);
@@ -214,6 +218,7 @@ const loadingProducts = ref(false);
 const saving = ref(false);
 const searchTerm = ref('');
 const feedback = reactive({ message: '', type: 'is-primary' });
+const notificationBell = ref(null);
 const productForm = reactive({
   id: null,
   codigo: '',
@@ -234,6 +239,10 @@ onMounted(() => {
   }
   loadProducts();
 });
+
+const handleNotificationClick = (notification) => {
+  console.log('Notification clicked:', notification);
+};
 
 const handleLogout = () => {
   authService.logout();

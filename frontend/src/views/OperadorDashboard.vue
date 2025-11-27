@@ -9,6 +9,9 @@
       <div class="navbar-menu">
         <div class="navbar-end">
           <div class="navbar-item">
+            <NotificationBell @notification-click="handleNotificationClick" ref="notificationBell" />
+          </div>
+          <div class="navbar-item">
             <span class="tag is-light">{{ user?.nome }}</span>
           </div>
           <div class="navbar-item">
@@ -31,53 +34,22 @@
               <p class="has-text-grey-dark">Acompanhe o volume de pedidos e garanta que catálogo e limites estejam em dia.</p>
             </div>
           </div>
-          <div class="level-right">
-            <div class="box kpi-box has-background-info has-text-white">
-              <p class="is-size-7 has-text-white-bis">Pedidos nas últimas 24h</p>
-              <p class="title is-4 has-text-white">{{ recentOrdersCount }}</p>
-              <p class="is-size-7">Ticket médio: R$ {{ averageTicket.toFixed(2) }}</p>
-            </div>
-          </div>
         </div>
 
-        <div class="columns is-multiline mt-2 kpi-grid">
-          <div class="column is-3-desktop is-6-tablet">
-            <div class="box has-background-info-light">
-              <p class="heading">Pedidos totais</p>
-              <p class="title is-4">{{ orders.length }}</p>
-              <p class="is-size-7">Últimos 50 registros</p>
-            </div>
-          </div>
-          <div class="column is-3-desktop is-6-tablet">
-            <div class="box has-background-success-light">
-              <p class="heading">Aprovados</p>
-              <p class="title is-4">{{ approvedOrders }}</p>
-              <p class="is-size-7">Liberados para faturamento</p>
-            </div>
-          </div>
-          <div class="column is-3-desktop is-6-tablet">
-            <div class="box has-background-warning-light">
-              <p class="heading">Em análise</p>
-              <p class="title is-4">{{ pendingOrders }}</p>
-              <p class="is-size-7">Aguardando conferência</p>
-            </div>
-          </div>
-          <div class="column is-3-desktop is-6-tablet">
-            <div class="box has-background-light">
-              <p class="heading">Valor total</p>
-              <p class="title is-4">R$ {{ totalOrdersValue.toFixed(2) }}</p>
-              <p class="is-size-7">Soma dos pedidos listados</p>
-            </div>
-          </div>
-        </div>
+        <!-- Open Orders Dashboard -->
+        <OpenOrdersDashboard 
+          ref="openOrdersDashboard"
+          @approve="handleApprove"
+          @reject="handleReject"
+        />
 
-        <div class="columns is-variable is-6">
+        <div class="columns is-variable is-6 mt-5">
           <div class="column is-7">
             <div class="box">
               <div class="level mb-3">
                 <div class="level-left">
                   <div>
-                    <p class="heading">Monitoramento de pedidos</p>
+                    <p class="heading">Todos os pedidos</p>
                     <p class="title is-5">Histórico recente</p>
                   </div>
                 </div>
@@ -199,6 +171,8 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/api';
 import { orderService } from '../services/orderService';
+import NotificationBell from '../components/NotificationBell.vue';
+import OpenOrdersDashboard from '../components/OpenOrdersDashboard.vue';
 
 const router = useRouter();
 const user = ref(null);
@@ -207,6 +181,8 @@ const loading = ref(false);
 const updatingStatus = reactive({});
 const targetStatus = reactive({});
 const feedback = reactive({ message: '', type: 'is-success' });
+const notificationBell = ref(null);
+const openOrdersDashboard = ref(null);
 
 onMounted(() => {
   user.value = authService.getUser();
@@ -251,6 +227,14 @@ const updateStatus = async (order, status) => {
       ? `Pedido #${order.id} aprovado.`
       : `Pedido #${order.id} cancelado.`;
     feedback.type = status === 'aprovado' ? 'is-success' : 'is-danger';
+    
+    // Refresh notifications and open orders dashboard
+    if (notificationBell.value) {
+      notificationBell.value.refresh();
+    }
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.updateOrderInList(order.id, status);
+    }
   } catch (error) {
     console.error('Erro ao atualizar status', error);
     feedback.message = error.response?.data?.error || 'Não foi possível atualizar o status';
@@ -261,18 +245,70 @@ const updateStatus = async (order, status) => {
   }
 };
 
-const approvedOrders = computed(() => orders.value.filter(order => order.status === 'aprovado').length);
-const pendingOrders = computed(() => orders.value.filter(order => order.status === 'em_analise' || order.status === 'pendente').length);
-const totalOrdersValue = computed(() => orders.value.reduce((sum, order) => sum + Number(order.total || 0), 0));
-const recentOrdersCount = computed(() => {
-  const now = Date.now();
-  const dayMs = 24 * 60 * 60 * 1000;
-  return orders.value.filter(order => now - new Date(order.created_at).getTime() <= dayMs).length;
-});
-const averageTicket = computed(() => {
-  if (!orders.value.length) return 0;
-  return totalOrdersValue.value / orders.value.length;
-});
+const handleApprove = async (order) => {
+  if (openOrdersDashboard.value) {
+    openOrdersDashboard.value.setUpdating(order.id, 'aprovado');
+  }
+  try {
+    const updated = await orderService.updateStatus(order.id, 'aprovado');
+    const index = orders.value.findIndex(o => o.id === order.id);
+    if (index !== -1) {
+      orders.value.splice(index, 1, updated);
+    }
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.updateOrderInList(order.id, 'aprovado');
+      openOrdersDashboard.value.setFeedback(`Pedido #${order.id} aprovado com sucesso!`, 'is-success');
+    }
+    if (notificationBell.value) {
+      notificationBell.value.refresh();
+    }
+  } catch (error) {
+    console.error('Erro ao aprovar pedido:', error);
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.setFeedback(error.response?.data?.error || 'Erro ao aprovar pedido', 'is-danger');
+    }
+  } finally {
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.clearUpdating(order.id);
+    }
+  }
+};
+
+const handleReject = async (order) => {
+  if (openOrdersDashboard.value) {
+    openOrdersDashboard.value.setUpdating(order.id, 'cancelado');
+  }
+  try {
+    const updated = await orderService.updateStatus(order.id, 'cancelado');
+    const index = orders.value.findIndex(o => o.id === order.id);
+    if (index !== -1) {
+      orders.value.splice(index, 1, updated);
+    }
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.updateOrderInList(order.id, 'cancelado');
+      openOrdersDashboard.value.setFeedback(`Pedido #${order.id} cancelado.`, 'is-warning');
+    }
+    if (notificationBell.value) {
+      notificationBell.value.refresh();
+    }
+  } catch (error) {
+    console.error('Erro ao cancelar pedido:', error);
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.setFeedback(error.response?.data?.error || 'Erro ao cancelar pedido', 'is-danger');
+    }
+  } finally {
+    if (openOrdersDashboard.value) {
+      openOrdersDashboard.value.clearUpdating(order.id);
+    }
+  }
+};
+
+const handleNotificationClick = (notification) => {
+  if (notification.order_id) {
+    // Scroll to or highlight the order
+    console.log('Clicked notification for order:', notification.order_id);
+  }
+};
 
 const formatDate = (value) => {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -305,19 +341,6 @@ const statusClass = (status) => {
 .box {
   border-radius: 10px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-}
-
-.kpi-box {
-  min-width: 240px;
-}
-
-.kpi-grid .box {
-  border-left: 4px solid transparent;
-}
-
-.kpi-grid .box:hover {
-  border-left-color: #0ea5e9;
-  transition: all 0.2s ease;
 }
 
 .table td, .table th {

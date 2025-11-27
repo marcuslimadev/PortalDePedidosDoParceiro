@@ -1,4 +1,5 @@
 import { getClient, query } from '../config/database.js';
+import { createNotification } from './notificationController.js';
 
 const validateItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) {
@@ -78,6 +79,15 @@ export const createOrder = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // Create notification for admin/operadores about new order
+    await createNotification({
+      userId: null, // null means for all admins/operadores
+      type: 'novo_pedido',
+      title: 'Novo Pedido Recebido',
+      message: `Pedido #${order.id} criado por ${req.user.nome || 'loja'} - Total: R$ ${Number(total).toFixed(2)}`,
+      orderId: order.id
+    });
 
     const orderItems = items.map(item => {
       const product = productsMap.get(item.productId);
@@ -192,6 +202,21 @@ export const updateOrderStatus = async (req, res) => {
       [id]
     );
 
+    // Create notification for the store about status change
+    const statusMessages = {
+      aprovado: 'foi aprovado',
+      cancelado: 'foi cancelado',
+      pendente: 'está pendente'
+    };
+
+    await createNotification({
+      userId: order.loja_id,
+      type: 'status_pedido',
+      title: `Pedido #${order.id} ${statusMessages[status]}`,
+      message: `Seu pedido #${order.id} no valor de R$ ${Number(order.total).toFixed(2)} ${statusMessages[status]}.`,
+      orderId: order.id
+    });
+
     res.json({
       order: {
         ...order,
@@ -202,5 +227,87 @@ export const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error('Erro ao atualizar status do pedido:', error);
     res.status(500).json({ error: 'Falha ao atualizar status do pedido' });
+  }
+};
+
+export const listOpenOrders = async (req, res) => {
+  try {
+    const ordersResult = await query(`
+      SELECT o.id, o.loja_id, o.status, o.payment_terms, o.observations, o.total, o.created_at, o.updated_at,
+             u.nome AS loja_nome
+      FROM orders o
+      JOIN users u ON u.id = o.loja_id
+      WHERE o.status = 'pendente'
+      ORDER BY o.created_at ASC
+      LIMIT 100
+    `);
+
+    const orders = ordersResult.rows;
+
+    if (orders.length === 0) {
+      return res.json({ orders: [] });
+    }
+
+    const orderIds = orders.map(order => order.id);
+    const placeholders = orderIds.map((_, index) => `$${index + 1}`).join(',');
+    const itemsResult = await query(
+      `SELECT oi.order_id, oi.product_id, oi.quantidade, oi.preco_unitario, oi.subtotal, p.codigo, p.descricao
+       FROM order_items oi
+       JOIN products p ON p.id = oi.product_id
+       WHERE oi.order_id IN (${placeholders})`,
+      orderIds
+    );
+
+    const itemsByOrder = itemsResult.rows.reduce((acc, item) => {
+      acc[item.order_id] = acc[item.order_id] || [];
+      acc[item.order_id].push(item);
+      return acc;
+    }, {});
+
+    const response = orders.map(order => ({
+      ...order,
+      items: itemsByOrder[order.id] || []
+    }));
+
+    res.json({ orders: response });
+  } catch (error) {
+    console.error('Erro ao listar pedidos em aberto:', error);
+    res.status(500).json({ error: 'Erro ao buscar pedidos em aberto' });
+  }
+};
+
+export const getOrderStats = async (req, res) => {
+  try {
+    const statsResult = await query(`
+      SELECT 
+        COUNT(*) FILTER (WHERE status = 'pendente') AS pendentes,
+        COUNT(*) FILTER (WHERE status = 'aprovado') AS aprovados,
+        COUNT(*) FILTER (WHERE status = 'cancelado') AS cancelados,
+        COUNT(*) AS total,
+        COALESCE(SUM(total) FILTER (WHERE status = 'pendente'), 0) AS valor_pendente,
+        COALESCE(SUM(total) FILTER (WHERE status = 'aprovado'), 0) AS valor_aprovado,
+        COALESCE(SUM(total), 0) AS valor_total,
+        COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') AS ultimas_24h,
+        COALESCE(SUM(total) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours'), 0) AS valor_24h
+      FROM orders
+    `);
+
+    const stats = statsResult.rows[0];
+    res.json({
+      stats: {
+        pendentes: parseInt(stats.pendentes, 10),
+        aprovados: parseInt(stats.aprovados, 10),
+        cancelados: parseInt(stats.cancelados, 10),
+        total: parseInt(stats.total, 10),
+        valorPendente: parseFloat(stats.valor_pendente),
+        valorAprovado: parseFloat(stats.valor_aprovado),
+        valorTotal: parseFloat(stats.valor_total),
+        ultimas24h: parseInt(stats.ultimas_24h, 10),
+        valor24h: parseFloat(stats.valor_24h)
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de pedidos:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
   }
 };

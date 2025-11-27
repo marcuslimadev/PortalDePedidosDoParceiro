@@ -6,6 +6,16 @@ export const orderService = {
     return response.data.orders;
   },
 
+  async listOpen() {
+    const response = await api.get('/orders/open');
+    return response.data.orders;
+  },
+
+  async getStats() {
+    const response = await api.get('/orders/stats');
+    return response.data.stats;
+  },
+
   async create(payload) {
     const response = await api.post('/orders', payload);
     return response.data.order;
