@@ -194,27 +194,43 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-// Project progress tracking
+// Project progress tracking alinhado ao plano atual (PLANO_DESENVOLVIMENTO.md)
 const totalFeatures = ref(85);
-const completedFeatures = ref(17);
+const completedFeatures = ref(44);
 const projectProgress = computed(() => Math.round((completedFeatures.value / totalFeatures.value) * 100));
 
 const moduleStatus = computed(() => [
   {
     name: 'Autenticação & Autorização',
-    done: 6,
+    done: 8,
     total: 8,
-    label: 'Em andamento',
-    progressClass: 'is-link',
-    tagClass: 'is-warning'
+    label: 'Completo',
+    progressClass: 'is-success',
+    tagClass: 'is-success'
   },
   {
     name: 'Gestão de Produtos',
-    done: 6,
+    done: 10,
     total: 12,
-    label: 'Catálogo em construção',
-    progressClass: 'is-success',
-    tagClass: 'is-success'
+    label: 'Catálogo robusto',
+    progressClass: 'is-link',
+    tagClass: 'is-info'
+  },
+  {
+    name: 'Gestão de Clientes',
+    done: 5,
+    total: 10,
+    label: 'Em andamento',
+    progressClass: 'is-warning',
+    tagClass: 'is-warning'
+  },
+  {
+    name: 'Sistema de Pedidos',
+    done: 5,
+    total: 15,
+    label: 'Carrinho e API ativos',
+    progressClass: 'is-primary',
+    tagClass: 'is-primary'
   },
   {
     name: 'Total do Projeto',
