@@ -71,6 +71,114 @@
           </div>
         </div>
 
+        <div class="box open-orders-box mt-5">
+          <div class="level mb-4">
+            <div class="level-left">
+              <div>
+                <p class="heading">Pedidos em aberto</p>
+                <p class="title is-5">Dashboard em tempo real</p>
+              </div>
+            </div>
+            <div class="level-right">
+              <button class="button is-light is-small" :class="{ 'is-loading': loadingSummary }" @click="loadOpenSummary()">
+                <span class="icon"><i class="fas fa-sync-alt"></i></span>
+                <span>Atualizar</span>
+              </button>
+            </div>
+          </div>
+
+          <div v-if="loadingSummary && !openSummary" class="has-text-centered py-4">
+            <span class="icon has-text-info"><i class="fas fa-spinner fa-spin"></i></span>
+            Carregando painel de pedidos...
+          </div>
+          <div v-else-if="summaryError" class="notification is-danger is-light">
+            {{ summaryError }}
+          </div>
+          <div v-else-if="!openSummary" class="has-text-grey has-text-centered">
+            Nenhum pedido pendente no momento.
+          </div>
+          <div v-else>
+            <div class="columns is-multiline summary-grid">
+              <div class="column is-4-desktop is-12-tablet">
+                <div class="summary-card">
+                  <p class="heading">Pedidos pendentes</p>
+                  <p class="title is-3">{{ openSummary.summary.totalOpen }}</p>
+                  <p class="is-size-7 has-text-grey">Fila aguardando aprovação</p>
+                </div>
+              </div>
+              <div class="column is-4-desktop is-6-tablet">
+                <div class="summary-card">
+                  <p class="heading">Valor em aberto</p>
+                  <p class="title is-4">{{ formatCurrency(openSummary.summary.totalValue) }}</p>
+                  <p class="is-size-7 has-text-grey">Somatório dos pendentes</p>
+                </div>
+              </div>
+              <div class="column is-4-desktop is-6-tablet">
+                <div class="summary-card">
+                  <p class="heading">Mais antigo</p>
+                  <p class="title is-4">{{ formatWaiting(openSummary.summary.oldestMinutes) }}</p>
+                  <p class="is-size-7 has-text-grey">Tempo em análise</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="status-tags mt-3">
+              <span
+                v-for="status in openSummary.byStatus"
+                :key="status.status"
+                class="tag is-medium"
+                :class="statusClass(status.status)"
+              >
+                {{ statusLabel(status.status) }} · {{ status.count }}
+              </span>
+            </div>
+
+            <div class="columns is-variable is-6 mt-4">
+              <div class="column is-5">
+                <h4 class="title is-6 mb-3">Aging por faixa</h4>
+                <div class="aging-grid">
+                  <div v-for="bucket in openSummary.aging" :key="bucket.label" class="aging-card">
+                    <p class="heading">{{ bucket.label }}</p>
+                    <p class="title is-5">{{ bucket.count }}</p>
+                    <p class="is-size-7 has-text-grey">{{ formatCurrency(bucket.totalValue) }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-7">
+                <h4 class="title is-6 mb-3">Fila de pendentes</h4>
+                <div class="table-container queue-table">
+                  <table class="table is-fullwidth is-hoverable">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Loja</th>
+                        <th class="has-text-right">Valor</th>
+                        <th>Espera</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-if="!openSummary.queue.length">
+                        <td colspan="4" class="has-text-centered has-text-grey">Nenhum pedido pendente.</td>
+                      </tr>
+                      <tr v-for="item in openSummary.queue" :key="item.id">
+                        <td><span class="tag is-light">{{ item.id }}</span></td>
+                        <td>
+                          <p class="has-text-weight-semibold">{{ item.loja_nome }}</p>
+                          <p class="is-size-7 has-text-grey">{{ statusLabel(item.status) }}</p>
+                        </td>
+                        <td class="has-text-right">{{ formatCurrency(item.total) }}</td>
+                        <td>{{ formatWaiting(item.waitingMinutes) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <p class="is-size-7 has-text-grey mt-3">Atualizado em {{ formatDate(openSummary.updatedAt) }}</p>
+          </div>
+        </div>
+
         <div class="columns is-variable is-6">
           <div class="column is-7">
             <div class="box">
@@ -82,10 +190,16 @@
                   </div>
                 </div>
                 <div class="level-right">
-                  <button class="button is-info" :class="{ 'is-loading': loading }" @click="loadOrders">
-                    <span class="icon"><i class="fas fa-sync-alt"></i></span>
-                    <span>Atualizar</span>
-                  </button>
+                  <div class="buttons">
+                    <button class="button is-light" :class="{ 'is-loading': downloadingExport }" @click="downloadOrdersCsv">
+                      <span class="icon"><i class="fas fa-file-download"></i></span>
+                      <span>Exportar CSV</span>
+                    </button>
+                    <button class="button is-info" :class="{ 'is-loading': loading }" @click="loadOrders">
+                      <span class="icon"><i class="fas fa-sync-alt"></i></span>
+                      <span>Atualizar</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -195,25 +309,45 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { authService } from '../services/api';
+import { authService, API_URL } from '../services/api';
 import { orderService } from '../services/orderService';
 
 const router = useRouter();
 const user = ref(null);
 const orders = ref([]);
 const loading = ref(false);
+const downloadingExport = ref(false);
 const updatingStatus = reactive({});
 const targetStatus = reactive({});
 const feedback = reactive({ message: '', type: 'is-success' });
+const openSummary = ref(null);
+const loadingSummary = ref(false);
+const summaryError = ref('');
+let orderStream = null;
+let summaryRefreshTimeout = null;
 
 onMounted(() => {
   user.value = authService.getUser();
   if (!user.value || user.value.role !== 'operador') {
     router.push('/login');
+    return;
   }
   loadOrders();
+  loadOpenSummary();
+  subscribeToOrderStream();
+});
+
+onBeforeUnmount(() => {
+  if (orderStream) {
+    orderStream.close();
+    orderStream = null;
+  }
+  if (summaryRefreshTimeout) {
+    clearTimeout(summaryRefreshTimeout);
+    summaryRefreshTimeout = null;
+  }
 });
 
 const handleLogout = () => {
@@ -224,7 +358,7 @@ const handleLogout = () => {
 const loadOrders = async () => {
   loading.value = true;
   try {
-    orders.value = await orderService.list();
+    orders.value = await orderService.list({ limit: 200 });
   } catch (error) {
     console.error('Erro ao carregar pedidos', error);
     feedback.message = error.response?.data?.error || 'Falha ao carregar pedidos';
@@ -232,6 +366,35 @@ const loadOrders = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const loadOpenSummary = async (silent = false) => {
+  if (!silent) {
+    loadingSummary.value = true;
+    summaryError.value = '';
+  }
+
+  try {
+    openSummary.value = await orderService.openSummary();
+  } catch (error) {
+    if (!silent) {
+      summaryError.value = error.response?.data?.error || 'Não foi possível carregar o dashboard de pedidos';
+    } else {
+      console.error('Falha ao atualizar painel de pedidos em aberto', error);
+    }
+  } finally {
+    if (!silent) {
+      loadingSummary.value = false;
+    }
+  }
+};
+
+const scheduleSummaryRefresh = () => {
+  if (summaryRefreshTimeout) return;
+  summaryRefreshTimeout = setTimeout(() => {
+    loadOpenSummary(true);
+    summaryRefreshTimeout = null;
+  }, 1200);
 };
 
 const isUpdating = (orderId) => updatingStatus[orderId] === true;
@@ -251,6 +414,7 @@ const updateStatus = async (order, status) => {
       ? `Pedido #${order.id} aprovado.`
       : `Pedido #${order.id} cancelado.`;
     feedback.type = status === 'aprovado' ? 'is-success' : 'is-danger';
+    scheduleSummaryRefresh();
   } catch (error) {
     console.error('Erro ao atualizar status', error);
     feedback.message = error.response?.data?.error || 'Não foi possível atualizar o status';
@@ -281,10 +445,125 @@ const formatDate = (value) => {
   }).format(new Date(value));
 };
 
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(Number(value || 0));
+};
+
+const formatWaiting = (minutes) => {
+  if (minutes === null || minutes === undefined) return '—';
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    const restHours = hours % 24;
+    if (restHours === 0) {
+      return `${days}d`;
+    }
+    return `${days}d ${restHours}h`;
+  }
+  if (remainingMinutes === 0) {
+    return `${hours}h`;
+  }
+  return `${hours}h ${remainingMinutes}m`;
+};
+
 const statusClass = (status) => {
   if (status === 'aprovado') return 'is-success';
   if (status === 'cancelado') return 'is-danger';
   return 'is-warning';
+};
+
+const statusLabel = (status) => {
+  const labels = {
+    pendente: 'Em análise',
+    aprovado: 'Aprovado',
+    cancelado: 'Cancelado'
+  };
+  return labels[status] || status;
+};
+
+const subscribeToOrderStream = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const source = new EventSource(`${API_URL}/orders/stream?token=${token}`);
+  orderStream = source;
+
+  const upsertOrder = (payload) => {
+    const index = orders.value.findIndex(order => order.id === payload.id);
+    if (index >= 0) {
+      orders.value.splice(index, 1, {
+        ...orders.value[index],
+        ...payload
+      });
+    } else {
+      orders.value = [payload, ...orders.value].slice(0, 50);
+    }
+  };
+
+  const parsePayload = (event) => {
+    try {
+      return JSON.parse(event.data);
+    } catch (error) {
+      console.error('Falha ao interpretar evento SSE', error);
+      return null;
+    }
+  };
+
+  source.addEventListener('order.created', (event) => {
+    const payload = parsePayload(event);
+    if (!payload) return;
+    upsertOrder(payload);
+    feedback.message = `Novo pedido #${payload.id} criado pela loja ${payload.loja_nome || ''}`.trim();
+    feedback.type = 'is-info';
+    scheduleSummaryRefresh();
+  });
+
+  source.addEventListener('order.status_updated', (event) => {
+    const payload = parsePayload(event);
+    if (!payload) return;
+    upsertOrder(payload);
+    feedback.message = `Pedido #${payload.id} atualizado para ${payload.status}.`;
+    feedback.type = 'is-info';
+    scheduleSummaryRefresh();
+  });
+
+  source.onerror = () => {
+    source.close();
+    setTimeout(subscribeToOrderStream, 3000);
+  };
+};
+
+const triggerDownload = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
+const downloadOrdersCsv = async () => {
+  downloadingExport.value = true;
+  feedback.message = '';
+  try {
+    const blob = await orderService.exportCsv();
+    const filename = `pedidos-${new Date().toISOString().split('T')[0]}.csv`;
+    triggerDownload(blob, filename);
+    feedback.message = 'Exportação de pedidos concluída com sucesso';
+    feedback.type = 'is-success';
+  } catch (error) {
+    feedback.message = error.response?.data?.error || 'Não foi possível exportar os pedidos';
+    feedback.type = 'is-danger';
+  } finally {
+    downloadingExport.value = false;
+  }
 };
 </script>
 
@@ -326,5 +605,41 @@ const statusClass = (status) => {
 
 .buttons .button {
   margin-right: 0.5rem;
+}
+
+.open-orders-box {
+  border: none;
+  box-shadow: 0 20px 40px rgba(14, 165, 233, 0.08);
+}
+
+.summary-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.1);
+}
+
+.status-tags .tag {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.aging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.aging-card {
+  border: 1px dashed rgba(14, 165, 233, 0.25);
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #f0f9ff;
+}
+
+.queue-table {
+  max-height: 280px;
+  overflow-y: auto;
 }
 </style>

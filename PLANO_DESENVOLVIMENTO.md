@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 56% concluído (48/85 funcionalidades)
+## 📊 Status do Projeto: 65% concluído (55/85 funcionalidades)
 
 ---
 
@@ -35,32 +35,32 @@
 - [x] Categorização de produtos
 - [x] API pública de catálogo para lojas
 
-## 4. Gestão de Clientes (5/10 - 50%)
+## 4. Gestão de Clientes (9/10 - 90%)
 - [x] Modelo de dados: clientes (CNPJ, IE, rota, segmentação Winthor)
 - [x] CRUD de clientes (backend)
 - [x] Campos padrão Winthor obrigatórios
 - [x] Interface de cadastro de clientes (Admin)
-- [ ] Gestão de limites de crédito por cliente
-- [ ] Prazos de pagamento personalizados (30/60/90)
+- [x] Gestão de limites de crédito por cliente
+- [x] Prazos de pagamento personalizados (30/60/90)
 - [ ] Associação cliente-usuário portal
-- [ ] Histórico de limites e alterações
+- [x] Histórico de limites e alterações
 - [x] Validação de CNPJ/IE
-- [ ] Status do cliente (ativo/inativo/bloqueado)
+- [x] Status do cliente (ativo/inativo/bloqueado)
 
-## 5. Sistema de Pedidos (8/15 - 53%)
+## 5. Sistema de Pedidos (11/15 - 73%)
 - [x] Modelo de dados: pedidos, itens_pedido
 - [x] API de criação de pedido
 - [x] Carrinho de compras (frontend)
-- [ ] Validação de limite de crédito ao fazer pedido
+- [x] Validação de limite de crédito ao fazer pedido
 - [x] Cálculo de totais e impostos
 - [ ] Aplicação de condições de pagamento
 - [x] Interface de pedidos para lojas
-- [ ] Funcionalidade "Repetir pedido anterior"
+- [x] Funcionalidade "Repetir pedido anterior"
 - [x] Acompanhamento de status do pedido
 - [ ] Histórico completo de pedidos
 - [x] Cancelamento de pedidos
 - [x] Aprovação de pedidos (workflow)
-- [ ] Exportação de pedidos para Excel
+- [x] Exportação de pedidos para Excel
 - [ ] Notificações de status (email/sistema)
 - [ ] Dashboard de pedidos em aberto
 
@@ -118,22 +118,22 @@
 | Infraestrutura & Base | 5/5 (100%) | ✅ Completo |
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
 | Gestão de Produtos | 11/12 (92%) | 🟡 Em andamento |
-| Gestão de Clientes | 5/10 (50%) | 🟡 Em andamento |
-| Sistema de Pedidos | 8/15 (53%) | 🟡 Em andamento |
+| Gestão de Clientes | 9/10 (90%) | 🟢 Quase lá |
+| Sistema de Pedidos | 11/15 (73%) | 🟡 Em andamento |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
 | Relatórios & Analytics | 2/9 (22%) | 🟡 Em andamento |
 | UX & Mobile | 3/6 (50%) | 🟡 Em andamento |
 | Segurança & Compliance | 2/7 (29%) | 🟡 Em andamento |
 | DevOps & Qualidade | 2/5 (40%) | 🟡 Em andamento |
 
-**Total Geral: 48/85 funcionalidades (56%)**
+**Total Geral: 55/85 funcionalidades (65%)**
 
 ---
 
 ## 🎯 Próximas Prioridades (Sprint 1)
 
-1. **Sistema de Pedidos** - finalizar fluxo de aprovação e notificações
-2. **Gestão de Clientes** - limites de crédito e status operacional
+1. **Sistema de Pedidos** - notificações, dashboard em aberto e histórico completo
+2. **Gestão de Clientes** - associação cliente-usuário portal
 3. **Relatórios & Analytics** - começar curvas ABC e dashboards
 4. **Segurança & Compliance** - rate limiting, auditoria e backup
 

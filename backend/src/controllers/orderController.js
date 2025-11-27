@@ -1,4 +1,5 @@
 import { getClient, query } from '../config/database.js';
+import { eventBus } from '../events/eventBus.js';
 
 const validateItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) {
@@ -25,6 +26,29 @@ export const createOrder = async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    const fail = async (status, message) => {
+      await client.query('ROLLBACK');
+      return res.status(status).json({ error: message });
+    };
+
+    const lojaResult = await client.query(
+      `SELECT nome, cliente_status, credit_limit, credit_used, payment_terms
+         FROM users
+        WHERE id = $1
+        FOR UPDATE`,
+      [req.user.id]
+    );
+
+    if (lojaResult.rows.length === 0) {
+      return fail(404, 'Perfil da loja não encontrado');
+    }
+
+    const lojaPerfil = lojaResult.rows[0];
+
+    if (lojaPerfil.cliente_status && lojaPerfil.cliente_status !== 'ativo') {
+      return fail(403, 'Cliente sem permissão para registrar pedidos');
+    }
+
     const productIds = items.map(item => item.productId);
     const placeholders = productIds.map((_, index) => `$${index + 1}`).join(',');
     const productsResult = await client.query(
@@ -41,7 +65,7 @@ export const createOrder = async (req, res) => {
       }
 
       if (product.estoque !== null && Number(item.quantidade) > Number(product.estoque)) {
-        return res.status(400).json({ error: `Quantidade solicitada excede o estoque para ${product.codigo}` });
+        return fail(400, `Quantidade solicitada excede o estoque para ${product.codigo}`);
       }
     }
 
@@ -52,11 +76,21 @@ export const createOrder = async (req, res) => {
       total += subtotal;
     }
 
+    if (lojaPerfil.credit_limit !== null) {
+      const atual = Number(lojaPerfil.credit_used || 0);
+      const limite = Number(lojaPerfil.credit_limit);
+      if (atual + total > limite) {
+        return fail(400, 'Limite de crédito excedido para a loja');
+      }
+    }
+
+    const paymentTermsToPersist = paymentTerms || lojaPerfil.payment_terms || null;
+
     const orderResult = await client.query(
       `INSERT INTO orders (loja_id, payment_terms, observations, total)
        VALUES ($1, $2, $3, $4)
        RETURNING id, status, payment_terms, observations, total, created_at, updated_at`,
-      [req.user.id, paymentTerms, observations, total]
+      [req.user.id, paymentTermsToPersist, observations, total]
     );
 
     const order = orderResult.rows[0];
@@ -77,6 +111,14 @@ export const createOrder = async (req, res) => {
       );
     }
 
+    await client.query(
+      `UPDATE users
+          SET credit_used = COALESCE(credit_used, 0) + $1,
+              updated_at = NOW()
+        WHERE id = $2`,
+      [total, req.user.id]
+    );
+
     await client.query('COMMIT');
 
     const orderItems = items.map(item => {
@@ -92,13 +134,20 @@ export const createOrder = async (req, res) => {
       };
     });
 
-    res.status(201).json({
-      order: {
-        ...order,
-        loja_id: req.user.id,
-        items: orderItems
-      }
+    const response = {
+      ...order,
+      loja_id: req.user.id,
+      loja_nome: lojaPerfil.nome,
+      items: orderItems
+    };
+
+    eventBus.emit('order-event', {
+      type: 'order.created',
+      lojaId: req.user.id,
+      payload: response
     });
+
+    res.status(201).json({ order: response });
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Erro ao criar pedido:', error);
@@ -112,6 +161,10 @@ export const listOrders = async (req, res) => {
   try {
     const isLoja = req.user.role === 'loja';
     const params = [];
+    const filters = [];
+    const limitParam = Number(req.query.limit) || 50;
+    const limit = Math.min(Math.max(limitParam, 1), 500);
+    const statusFilter = req.query.status;
     let baseQuery = `
       SELECT o.id, o.loja_id, o.status, o.payment_terms, o.observations, o.total, o.created_at, o.updated_at,
              u.nome AS loja_nome
@@ -120,10 +173,20 @@ export const listOrders = async (req, res) => {
 
     if (isLoja) {
       params.push(req.user.id);
-      baseQuery += ' WHERE o.loja_id = $1';
+      filters.push(`o.loja_id = $${params.length}`);
     }
 
-    baseQuery += ' ORDER BY o.created_at DESC LIMIT 50';
+    if (statusFilter) {
+      params.push(statusFilter);
+      filters.push(`o.status = $${params.length}`);
+    }
+
+    if (filters.length > 0) {
+      baseQuery += ' WHERE ' + filters.join(' AND ');
+    }
+
+    params.push(limit);
+    baseQuery += ` ORDER BY o.created_at DESC LIMIT $${params.length}`;
 
     const ordersResult = await query(baseQuery, params);
     const orders = ordersResult.rows;
@@ -192,15 +255,244 @@ export const updateOrderStatus = async (req, res) => {
       [id]
     );
 
-    res.json({
-      order: {
-        ...order,
-        loja_nome: lojaResult.rows[0]?.nome || null,
-        items: itemsResult.rows
-      }
+    const response = {
+      ...order,
+      loja_nome: lojaResult.rows[0]?.nome || null,
+      items: itemsResult.rows
+    };
+
+    eventBus.emit('order-event', {
+      type: 'order.status_updated',
+      lojaId: order.loja_id,
+      payload: response
     });
+
+    res.json({ order: response });
   } catch (error) {
     console.error('Erro ao atualizar status do pedido:', error);
     res.status(500).json({ error: 'Falha ao atualizar status do pedido' });
+  }
+};
+
+const minutesSince = (date) => {
+  if (!date) return null;
+  const diff = Date.now() - new Date(date).getTime();
+  if (Number.isNaN(diff)) return null;
+  return Math.max(0, Math.floor(diff / 60000));
+};
+
+export const openOrdersSummary = async (req, res) => {
+  try {
+    const [summaryResult, byStatusResult, queueResult, agingResult] = await Promise.all([
+      query(
+        `SELECT COUNT(*) AS total_open,
+                COALESCE(SUM(total), 0) AS total_value,
+                MIN(created_at) AS oldest_created_at
+           FROM orders
+          WHERE status = 'pendente'`
+      ),
+      query(
+        `SELECT status,
+                COUNT(*) AS count,
+                COALESCE(SUM(total), 0) AS total_value,
+                MIN(created_at) AS oldest_created_at
+           FROM orders
+          WHERE status != 'cancelado'
+       GROUP BY status`
+      ),
+      query(
+        `SELECT o.id,
+                o.status,
+                o.total,
+                o.created_at,
+                u.nome AS loja_nome
+           FROM orders o
+           JOIN users u ON u.id = o.loja_id
+          WHERE o.status = 'pendente'
+       ORDER BY o.created_at ASC
+          LIMIT 20`
+      ),
+      query(
+        `SELECT
+            COUNT(*) FILTER (WHERE NOW() - created_at <= INTERVAL '2 hours') AS up_to_2h,
+            COALESCE(SUM(total) FILTER (WHERE NOW() - created_at <= INTERVAL '2 hours'), 0) AS value_up_to_2h,
+            COUNT(*) FILTER (WHERE NOW() - created_at > INTERVAL '2 hours' AND NOW() - created_at <= INTERVAL '6 hours') AS between_2_6h,
+            COALESCE(SUM(total) FILTER (WHERE NOW() - created_at > INTERVAL '2 hours' AND NOW() - created_at <= INTERVAL '6 hours'), 0) AS value_between_2_6h,
+            COUNT(*) FILTER (WHERE NOW() - created_at > INTERVAL '6 hours' AND NOW() - created_at <= INTERVAL '24 hours') AS between_6_24h,
+            COALESCE(SUM(total) FILTER (WHERE NOW() - created_at > INTERVAL '6 hours' AND NOW() - created_at <= INTERVAL '24 hours'), 0) AS value_between_6_24h,
+            COUNT(*) FILTER (WHERE NOW() - created_at > INTERVAL '24 hours') AS over_24h,
+            COALESCE(SUM(total) FILTER (WHERE NOW() - created_at > INTERVAL '24 hours'), 0) AS value_over_24h
+          FROM orders
+         WHERE status = 'pendente'`
+      )
+    ]);
+
+    const summaryRow = summaryResult.rows[0] || {};
+    const agingRow = agingResult.rows[0] || {};
+
+    const summary = {
+      totalOpen: Number(summaryRow.total_open) || 0,
+      totalValue: Number(summaryRow.total_value) || 0,
+      oldestMinutes: minutesSince(summaryRow.oldest_created_at)
+    };
+
+    const byStatus = byStatusResult.rows.map(row => ({
+      status: row.status,
+      count: Number(row.count) || 0,
+      totalValue: Number(row.total_value) || 0,
+      oldestMinutes: minutesSince(row.oldest_created_at)
+    }));
+
+    const aging = [
+      { label: '0-2h', count: Number(agingRow.up_to_2h) || 0, totalValue: Number(agingRow.value_up_to_2h) || 0 },
+      { label: '2-6h', count: Number(agingRow.between_2_6h) || 0, totalValue: Number(agingRow.value_between_2_6h) || 0 },
+      { label: '6-24h', count: Number(agingRow.between_6_24h) || 0, totalValue: Number(agingRow.value_between_6_24h) || 0 },
+      { label: '24h+', count: Number(agingRow.over_24h) || 0, totalValue: Number(agingRow.value_over_24h) || 0 }
+    ];
+
+    const queue = queueResult.rows.map(row => ({
+      id: row.id,
+      loja_nome: row.loja_nome,
+      status: row.status,
+      total: Number(row.total) || 0,
+      created_at: row.created_at,
+      waitingMinutes: minutesSince(row.created_at)
+    }));
+
+    res.json({
+      summary,
+      byStatus,
+      aging,
+      queue,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erro ao gerar resumo de pedidos em aberto:', error);
+    res.status(500).json({ error: 'Não foi possível carregar o dashboard de pedidos' });
+  }
+};
+
+export const repeatOrder = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const orderResult = await query(
+      `SELECT id, loja_id, payment_terms
+         FROM orders
+        WHERE id = $1`,
+      [id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+
+    const order = orderResult.rows[0];
+
+    if (req.user.role === 'loja' && order.loja_id !== req.user.id) {
+      return res.status(403).json({ error: 'Você não pode repetir pedidos de outra loja' });
+    }
+
+    const itemsResult = await query(
+      `SELECT product_id, quantidade
+         FROM order_items
+        WHERE order_id = $1`,
+      [id]
+    );
+
+    if (itemsResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Pedido selecionado não possui itens para repetir' });
+    }
+
+    req.body = {
+      items: itemsResult.rows.map(item => ({
+        productId: item.product_id,
+        quantidade: item.quantidade
+      })),
+      paymentTerms: req.body?.paymentTerms || order.payment_terms,
+      observations: req.body?.observations || `Repetição automática do pedido #${order.id}`
+    };
+
+    return createOrder(req, res);
+  } catch (error) {
+    console.error('Erro ao repetir pedido:', error);
+    return res.status(500).json({ error: 'Não foi possível repetir o pedido' });
+  }
+};
+
+export const exportOrdersCsv = async (req, res) => {
+  try {
+    const limitParam = Number(req.query.limit) || 200;
+    const limit = Math.min(Math.max(limitParam, 1), 1000);
+
+    const ordersResult = await query(
+      `SELECT o.id, o.loja_id, o.status, o.payment_terms, o.observations, o.total, o.created_at, o.updated_at,
+              u.nome AS loja_nome, u.email AS loja_email
+         FROM orders o
+         JOIN users u ON u.id = o.loja_id
+        ORDER BY o.created_at DESC
+        LIMIT $1`,
+      [limit]
+    );
+
+    const orders = ordersResult.rows;
+
+    if (orders.length === 0) {
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=pedidos.csv');
+      return res.send('id;loja;email;status;total;pagamento;criado_em;atualizado_em;itens');
+    }
+
+    const orderIds = orders.map(order => order.id);
+    const placeholders = orderIds.map((_, index) => `$${index + 1}`).join(',');
+    const itemsResult = await query(
+      `SELECT oi.order_id, oi.product_id, oi.quantidade, p.codigo, p.descricao
+         FROM order_items oi
+         JOIN products p ON p.id = oi.product_id
+        WHERE oi.order_id IN (${placeholders})`,
+      orderIds
+    );
+
+    const itemsByOrder = itemsResult.rows.reduce((acc, item) => {
+      acc[item.order_id] = acc[item.order_id] || [];
+      acc[item.order_id].push(item);
+      return acc;
+    }, {});
+
+    const header = ['id', 'loja', 'email', 'status', 'total', 'pagamento', 'criado_em', 'atualizado_em', 'itens'];
+    const rows = orders.map(order => {
+      const items = (itemsByOrder[order.id] || []).map(item => `${item.quantidade}x ${item.codigo}`).join(' | ');
+      return [
+        order.id,
+        order.loja_nome,
+        order.loja_email,
+        order.status,
+        Number(order.total).toFixed(2),
+        order.payment_terms || '',
+        order.created_at.toISOString(),
+        order.updated_at.toISOString(),
+        items
+      ];
+    });
+
+    const csv = [header, ...rows]
+      .map(columns => columns
+        .map(column => {
+          if (column === null || column === undefined) return '';
+          const value = String(column).replace(/"/g, '""');
+          if (value.includes(';') || value.includes('\n') || value.includes('"')) {
+            return `"${value}"`;
+          }
+          return value;
+        })
+        .join(';'))
+      .join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=pedidos-${Date.now()}.csv`);
+    res.send('\ufeff' + csv);
+  } catch (error) {
+    console.error('Erro ao exportar pedidos:', error);
+    res.status(500).json({ error: 'Não foi possível exportar os pedidos' });
   }
 };

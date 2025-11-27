@@ -8,6 +8,7 @@ import authRouter from './routes/auth.js';
 import productsRouter from './routes/products.js';
 import ordersRouter from './routes/orders.js';
 import catalogRouter from './routes/catalog.js';
+import clientsRouter from './routes/clients.js';
 import { query } from './config/database.js';
 
 dotenv.config();
@@ -75,6 +76,7 @@ app.use('/api/catalog', catalogRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/clients', clientsRouter);
 
 const port = process.env.PORT || 3000;
 

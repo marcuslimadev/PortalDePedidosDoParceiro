@@ -238,6 +238,16 @@
                     <p v-if="order.payment_terms" class="is-size-7 has-text-grey">
                       Pagamento: {{ order.payment_terms }}
                     </p>
+                    <div class="has-text-right mt-2">
+                      <button
+                        class="button is-small is-light"
+                        :class="{ 'is-loading': repeatingOrderId === order.id }"
+                        @click="repeatExistingOrder(order)"
+                      >
+                        <span class="icon is-small"><i class="fas fa-redo"></i></span>
+                        <span>Repetir pedido</span>
+                      </button>
+                    </div>
                   </div>
                 </article>
               </div>
@@ -250,9 +260,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { authService } from '../services/api';
+import { authService, API_URL } from '../services/api';
 import { productService } from '../services/productService';
 import { orderService } from '../services/orderService';
 
@@ -263,6 +273,7 @@ const loadingProducts = ref(false);
 const loadingOrders = ref(false);
 const saving = ref(false);
 const orders = ref([]);
+const repeatingOrderId = ref(null);
 const cart = ref([]);
 const searchTerm = ref('');
 const quantitySelections = reactive({});
@@ -273,14 +284,24 @@ const orderForm = reactive({
 });
 
 const orderTotal = computed(() => cart.value.reduce((sum, item) => sum + item.subtotal, 0));
+let orderStream = null;
 
 onMounted(() => {
   user.value = authService.getUser();
   if (!user.value || user.value.role !== 'loja') {
     router.push('/login');
+    return;
   }
   loadProducts();
   loadOrders();
+  subscribeToOrderStream();
+});
+
+onBeforeUnmount(() => {
+  if (orderStream) {
+    orderStream.close();
+    orderStream = null;
+  }
 });
 
 const handleLogout = () => {
@@ -374,12 +395,78 @@ const submitOrder = async () => {
 const loadOrders = async () => {
   loadingOrders.value = true;
   try {
-    orders.value = await orderService.list();
+    orders.value = await orderService.list({ limit: 100 });
   } catch (error) {
     feedback.message = error.response?.data?.error || 'Falha ao carregar pedidos';
     feedback.type = 'is-danger';
   } finally {
     loadingOrders.value = false;
+  }
+};
+
+const subscribeToOrderStream = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const source = new EventSource(`${API_URL}/orders/stream?token=${token}`);
+  orderStream = source;
+
+  const upsertOrder = (payload) => {
+    const idx = orders.value.findIndex(order => order.id === payload.id);
+    if (idx >= 0) {
+      orders.value.splice(idx, 1, {
+        ...orders.value[idx],
+        ...payload
+      });
+    } else {
+      orders.value = [payload, ...orders.value].slice(0, 50);
+    }
+  };
+
+  const parsePayload = (event) => {
+    try {
+      return JSON.parse(event.data);
+    } catch (error) {
+      console.error('Erro ao ler evento SSE', error);
+      return null;
+    }
+  };
+
+  source.addEventListener('order.created', (event) => {
+    const payload = parsePayload(event);
+    if (!payload) return;
+    upsertOrder(payload);
+    feedback.message = `Novo pedido #${payload.id} registrado.`;
+    feedback.type = 'is-info';
+  });
+
+  source.addEventListener('order.status_updated', (event) => {
+    const payload = parsePayload(event);
+    if (!payload) return;
+    upsertOrder(payload);
+    feedback.message = `Pedido #${payload.id} agora está ${payload.status}.`;
+    feedback.type = 'is-info';
+  });
+
+  source.onerror = () => {
+    source.close();
+    setTimeout(subscribeToOrderStream, 3000);
+  };
+};
+
+const repeatExistingOrder = async (order) => {
+  repeatingOrderId.value = order.id;
+  feedback.message = '';
+  try {
+    const repeated = await orderService.repeat(order.id);
+    orders.value = [repeated, ...orders.value].slice(0, 50);
+    feedback.message = `Pedido #${repeated.id} criado novamente a partir do pedido #${order.id}`;
+    feedback.type = 'is-success';
+  } catch (error) {
+    feedback.message = error.response?.data?.error || 'Não foi possível repetir o pedido';
+    feedback.type = 'is-danger';
+  } finally {
+    repeatingOrderId.value = null;
   }
 };
 

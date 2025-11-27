@@ -23,7 +23,7 @@ plano.md   → Detalhamento funcional coletado com o cliente
 
 ```powershell
 cd "c:\Projetos\Portal de Pedidos do Parceiro\backend"
-pm install
+npm install
 cp .env.example .env
 # ajuste DATABASE_URL antes de seguir
 npm run dev
@@ -33,12 +33,18 @@ Endpoints disponíveis:
 - `GET /` → teste rápido
 - `GET /api/health` → verifica conexão com o Postgres (necessita banco configurado)
 - `GET /api/catalog` → catálogo público de produtos com busca opcional
+- `GET /api/clients` → (admin/operador) lista lojas com limites e status operacionais
+- `GET /api/clients/:id` → (admin/operador) detalhes de um cliente específico
+- `PUT /api/clients/:id` → (admin/operador) atualiza CNPJ, rota, segmentação, limite e prazos
+- `POST /api/orders` → (loja) agora valida limite de crédito e status do cliente antes de registrar
+- `POST /api/orders/:id/repeat` → (loja) replica automaticamente os itens de um pedido anterior
+- `GET /api/orders/export/csv` → (admin/operador) gera arquivo CSV com os pedidos mais recentes
 
 ### Frontend
 
 ```powershell
 cd "c:\Projetos\Portal de Pedidos do Parceiro\frontend"
-pm install
+npm install
 npm run dev
 ```
 
@@ -60,11 +66,19 @@ Para futuras atualizações:
 - Ajustar secrets adicionais (por exemplo, `JWT_SECRET`, `STORAGE_BUCKET`, etc.) conforme forem surgindo.
 - Auto-deploy está habilitado: push para `master` atualiza produção automaticamente.
 
+## Esteira de CI/CD
+
+- Workflow `CI` em `.github/workflows/ci.yml` executa em cada `push`/PR para `master`.
+- Job **Backend lint**: Node 20, `npm ci` em `backend/` e `npm run lint` para garantir qualidade do código.
+- Job **Frontend build**: depende do backend, roda `npm ci` em `frontend/` seguido de `npm run build` para validar o bundle.
+- O cache do npm está configurado para acelerar execuções sucessivas.
+- Admins e operadores podem exportar pedidos diretamente nas telas internas (botão “Exportar pedidos (CSV)” no Admin e “Exportar CSV” no Operador, ambos usando o endpoint acima).
+
 ## Próximos passos sugeridos
 
-1. Modelar esquemas do banco (clientes, produtos, pedidos, limites, histórico ABC).
+1. Modelar esquemas pendentes do banco (histórico ABC, logs e auditoria).
 2. Definir autenticação (SSO Winthor ou OAuth interno) e perfis de acesso finos.
-3. Implementar fluxo completo de pedidos (carrinho, aprovação, acompanhamento do status no Winthor).
-4. Acrescentar testes automatizados (unitários e e2e) e pipeline CI.
+3. Ampliar o fluxo de pedidos (exportação, notificações e integração Winthor).
+4. Acrescentar testes automatizados (unitários, integração e E2E) e expandir a esteira.
 
 Consulte `plano.md` para o detalhamento funcional acordado até o momento.
