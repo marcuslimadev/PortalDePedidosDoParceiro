@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
-import { query } from '../config/database.js';
+import { query, getClient } from '../config/database.js';
 import { runMigrations } from '../migrations/run.js';
 
 const __filename = fileURLToPath(import.meta.url);
