@@ -176,7 +176,10 @@
                 <div class="control has-icons-left">
                   <div class="select is-fullwidth">
                     <select v-model="orderForm.paymentTerms">
-                      <option value="30">30 dias</option>
+                      <option value="30 dias">30 dias</option>
+                      <option value="45 dias">45 dias</option>
+                      <option value="60 dias">60 dias</option>
+                      <option value="90 dias">90 dias</option>
                       <option value="30/60">30/60</option>
                       <option value="30/60/90">30/60/90</option>
                       <option value="Antecipado">Antecipado</option>
@@ -286,7 +289,7 @@ const searchTerm = ref('');
 const quantitySelections = reactive({});
 const feedback = reactive({ message: '', type: 'is-primary' });
 const orderForm = reactive({
-  paymentTerms: '30',
+  paymentTerms: '30 dias',
   observations: ''
 });
 
@@ -376,14 +379,14 @@ const submitOrder = async () => {
   feedback.message = '';
 
   try {
-    const orderPayload = {
-      paymentTerms: orderForm.paymentTerms,
-      observations: orderForm.observations,
-      items: cart.value.map(item => ({
-        productId: item.product_id,
-        quantidade: item.quantidade
-      }))
-    };
+  const orderPayload = {
+    paymentTerms: orderForm.paymentTerms,
+    observations: orderForm.observations,
+    items: cart.value.map(item => ({
+      productId: item.product_id,
+      quantidade: item.quantidade
+    }))
+  };
 
     const created = await orderService.create(orderPayload);
     orders.value = [created, ...orders.value].slice(0, 50);

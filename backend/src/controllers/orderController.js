@@ -2,6 +2,16 @@ import { getClient, query } from '../config/database.js';
 import { eventBus } from '../events/eventBus.js';
 import { notifyUsers, notifyUser } from '../services/notificationService.js';
 
+const allowedPaymentTerms = [
+  '30 dias',
+  '45 dias',
+  '60 dias',
+  '90 dias',
+  '30/60',
+  '30/60/90',
+  'Antecipado'
+];
+
 const validateItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) {
     return 'Inclua ao menos um item no pedido';
@@ -83,6 +93,10 @@ export const createOrder = async (req, res) => {
       if (atual + total > limite) {
         return fail(400, 'Limite de crédito excedido para a loja');
       }
+    }
+
+    if (paymentTerms && !allowedPaymentTerms.includes(paymentTerms)) {
+      return fail(400, 'Condição de pagamento inválida');
     }
 
     const paymentTermsToPersist = paymentTerms || lojaPerfil.payment_terms || null;
