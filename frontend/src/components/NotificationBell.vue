@@ -167,16 +167,29 @@ const formatTime = (dateString) => {
   }).format(date);
 };
 
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    loadUnreadCount();
+  }
+};
+
 onMounted(() => {
   loadUnreadCount();
-  // Poll for new notifications every 30 seconds
-  pollInterval = setInterval(loadUnreadCount, 30000);
+  // Poll for new notifications every 30 seconds only when page is visible
+  pollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      loadUnreadCount();
+    }
+  }, 30000);
+  // Also refresh when page becomes visible
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onUnmounted(() => {
   if (pollInterval) {
     clearInterval(pollInterval);
   }
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 
 defineExpose({

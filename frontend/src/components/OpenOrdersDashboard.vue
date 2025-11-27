@@ -279,16 +279,29 @@ const setFeedback = (message, type) => {
   feedback.type = type;
 };
 
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    refresh();
+  }
+};
+
 onMounted(() => {
   refresh();
-  // Auto-refresh every 60 seconds
-  refreshInterval = setInterval(refresh, 60000);
+  // Auto-refresh every 60 seconds only when page is visible
+  refreshInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      refresh();
+    }
+  }, 60000);
+  // Also refresh when page becomes visible
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onUnmounted(() => {
   if (refreshInterval) {
     clearInterval(refreshInterval);
   }
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 
 defineExpose({

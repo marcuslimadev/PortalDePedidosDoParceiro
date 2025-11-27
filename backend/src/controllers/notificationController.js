@@ -139,6 +139,7 @@ export const createNotification = async (notificationData) => {
     return result.rows[0];
   } catch (error) {
     console.error('Erro ao criar notificação:', error);
+    // Return null but log the error - notification failure should not block order operations
     return null;
   }
 };
