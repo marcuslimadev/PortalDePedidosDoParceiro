@@ -29,6 +29,7 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    autoDeploy: true
     pullRequestPreviewsEnabled: true
     envVars:
       - key: NODE_VERSION
