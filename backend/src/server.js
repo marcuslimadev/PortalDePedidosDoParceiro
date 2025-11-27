@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import healthRouter from './routes/health.js';
 import authRouter from './routes/auth.js';
 import productsRouter from './routes/products.js';
+import ordersRouter from './routes/orders.js';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.get('/', (req, res) => {
 app.use('/api', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
+app.use('/api/orders', ordersRouter);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
