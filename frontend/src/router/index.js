@@ -49,8 +49,15 @@ router.beforeEach((to, from, next) => {
 
   if (requiresAuth && !isAuthenticated) {
     next('/login');
-  } else if (to.meta.role) {
-    const user = authService.getUser();
+    return;
+  }
+
+  let user = authService.getUser();
+  if (requiresAuth && !user && authService.getToken()) {
+    user = authService.loadUserFromToken();
+  }
+
+  if (to.meta.role) {
     if (user && user.role === to.meta.role) {
       next();
     } else {
