@@ -525,6 +525,34 @@ const wizardSections = [
       { key: 'codinfnutri', label: 'Cod. Info Nutricional' },
       { key: 'obs', label: 'Observacoes' }
     ]
+  },
+  {
+    title: 'Fiscal e Comercial',
+    description: 'Regras de tributacao e venda',
+    fields: [
+      { key: 'tributacao', label: 'Tributacao detalhada' },
+      { key: 'tipoprod', label: 'Tipo Produto' },
+      { key: 'classe', label: 'Classe' },
+      { key: 'classevenda', label: 'Classe Venda' },
+      { key: 'classecompra', label: 'Classe Compra' },
+      { key: 'percbofins', label: '% Cofins' },
+      { key: 'percpis', label: '% Pis' },
+      { key: 'percipi', label: '% IPI' },
+      { key: 'percdifaliq', label: '% Dif. Aliq.' },
+      { key: 'prazomaxvenda', label: 'Prazo max. venda' }
+    ]
+  },
+  {
+    title: 'Auditoria e Controle',
+    description: 'Responsaveis e datas',
+    fields: [
+      { key: 'codfunccadastro', label: 'Func. cadastro' },
+      { key: 'codfuncultalter', label: 'Func. ultima alteracao' },
+      { key: 'dtcadastro', label: 'Data cadastro' },
+      { key: 'dtultalter', label: 'Data ultima alteracao' },
+      { key: 'dtexclusao', label: 'Data exclusao' },
+      { key: 'obs2', label: 'Obs internas' }
+    ]
   }
 ];
 const productForm = reactive({
