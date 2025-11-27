@@ -63,7 +63,7 @@
           <div class="column is-3-desktop is-6-tablet">
             <div class="box has-background-warning-light">
               <p class="heading">Status</p>
-              <p class="title is-4">Produtos vivos</p>
+              <p class="title is-4">Produtos ativos</p>
               <p class="is-size-7">Listagem com busca por codigo/descricao</p>
             </div>
           </div>
