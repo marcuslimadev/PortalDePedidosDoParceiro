@@ -261,6 +261,46 @@
                 </div>
               </div>
             </div>
+
+            <div class="box">
+              <p class="heading">Notificações</p>
+              <p class="title is-5">Atualizações da loja</p>
+
+              <div class="level mb-2">
+                <div class="level-left">
+                  <span class="tag is-info is-light">Não lidas: {{ notificationsMeta.unread || 0 }}</span>
+                </div>
+                <div class="level-right">
+                  <button class="button is-light is-small" :class="{ 'is-loading': loadingNotifications }" @click="loadNotifications">
+                    <span class="icon"><i class="fas fa-sync-alt"></i></span>
+                  </button>
+                  <button class="button is-link is-light is-small" @click="markAllNotifications" :disabled="loadingNotifications || !notificationsMeta.unread">
+                    <span class="icon"><i class="fas fa-check"></i></span>
+                    <span>Marcar lidas</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="loadingNotifications" class="has-text-centered py-3">
+                <span class="icon has-text-info"><i class="fas fa-spinner fa-spin"></i></span>
+              </div>
+              <div v-else-if="!notifications.length" class="has-text-grey is-size-7">
+                Nenhuma notificação no momento.
+              </div>
+              <ul v-else class="notification-list">
+                <li v-for="notification in notifications" :key="notification.id" class="notification-item">
+                  <div class="is-flex is-justify-content-space-between is-align-items-center">
+                    <div>
+                      <p class="is-size-6 has-text-weight-semibold">{{ notification.title }}</p>
+                      <p class="is-size-7 has-text-grey">{{ notification.body }}</p>
+                    </div>
+                    <span class="tag" :class="notification.read_at ? 'is-light' : 'is-info'">
+                      {{ notification.read_at ? 'Lida' : 'Nova' }}
+                    </span>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -274,6 +314,7 @@ import { useRouter } from 'vue-router';
 import { authService, API_URL } from '../services/api';
 import { productService } from '../services/productService';
 import { orderService } from '../services/orderService';
+import { notificationService } from '../services/notificationService';
 
 const router = useRouter();
 const user = ref(null);
@@ -292,9 +333,15 @@ const orderForm = reactive({
   paymentTerms: '30 dias',
   observations: ''
 });
+const notifications = ref([]);
+const notificationsMeta = ref({ unread: 0 });
+const loadingNotifications = ref(false);
 
 const orderTotal = computed(() => cart.value.reduce((sum, item) => sum + item.subtotal, 0));
 let orderStream = null;
+const notifications = ref([]);
+const notificationsMeta = ref({ unread: 0 });
+const loadingNotifications = ref(false);
 
 onMounted(() => {
   user.value = authService.getUser();
@@ -304,6 +351,7 @@ onMounted(() => {
   }
   loadProducts();
   loadOrders();
+  loadNotifications();
   subscribeToOrderStream();
 });
 
@@ -430,6 +478,28 @@ const loadOrders = async (reset = true) => {
   }
 };
 
+const loadNotifications = async () => {
+  loadingNotifications.value = true;
+  try {
+    const { notifications: list, meta } = await notificationService.list(10);
+    notifications.value = list || [];
+    notificationsMeta.value = meta || { unread: 0 };
+  } catch (error) {
+    console.error('Erro ao carregar notificacoes', error);
+  } finally {
+    loadingNotifications.value = false;
+  }
+};
+
+const markAllNotifications = async () => {
+  try {
+    await notificationService.markAll();
+    await loadNotifications();
+  } catch (error) {
+    console.error('Erro ao marcar notificacoes', error);
+  }
+};
+
 const canLoadMoreOrders = computed(() => orders.value.length < (ordersMeta.value.total || 0));
 
 const subscribeToOrderStream = () => {
@@ -466,6 +536,7 @@ const subscribeToOrderStream = () => {
     upsertOrder(payload);
     feedback.message = `Novo pedido #${payload.id} registrado.`;
     feedback.type = 'is-info';
+    loadNotifications();
   });
 
   source.addEventListener('order.status_updated', (event) => {
@@ -474,6 +545,7 @@ const subscribeToOrderStream = () => {
     upsertOrder(payload);
     feedback.message = `Pedido #${payload.id} agora está ${payload.status}.`;
     feedback.type = 'is-info';
+    loadNotifications();
   });
 
   source.onerror = () => {
@@ -531,5 +603,20 @@ const statusClass = (status) => {
 .order-card {
   padding: 12px 0;
   border-bottom: 1px solid #f2f2f2;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
 }
 </style>
