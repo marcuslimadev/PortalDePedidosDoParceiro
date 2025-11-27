@@ -9,6 +9,7 @@ import productsRouter from './routes/products.js';
 import ordersRouter from './routes/orders.js';
 import catalogRouter from './routes/catalog.js';
 import clientsRouter from './routes/clients.js';
+import { runMigrations } from './migrations/run.js';
 import { query } from './config/database.js';
 
 dotenv.config();
@@ -82,6 +83,8 @@ const port = process.env.PORT || 3000;
 
 async function startServer () {
   try {
+    // Garantir que a base esteja sempre atualizada em qualquer ambiente (Render/Docker/local)
+    await runMigrations();
     await ensureDefaultAdminUser();
   } catch (error) {
     console.error('Falha ao garantir usuário admin padrão:', error);
