@@ -1,124 +1,110 @@
 <template>
   <div class="homepage">
-    <!-- Progress Banner -->
-    <section class="section has-background-info-light py-4">
-      <div class="container">
+    <section class="hero-section">
+      <div class="hero-layer"></div>
+      <div class="container hero-content">
         <div class="columns is-vcentered">
-          <div class="column is-8">
-            <h3 class="title is-5 mb-2">
-              <span class="icon has-text-info"><i class="fas fa-code-branch"></i></span>
-              Status do Desenvolvimento
-            </h3>
-            <progress class="progress is-info" :value="projectProgress" max="100">{{ projectProgress }}%</progress>
+          <div class="column is-7">
+            <p class="eyebrow">
+              <span class="icon"><i class="fas fa-sitemap"></i></span>
+              Portal de Pedidos do Parceiro
+            </p>
+            <h1 class="title is-1 has-text-white mb-3">Status em tempo real</h1>
+            <p class="subtitle is-5 has-text-white-bis">
+              Acompanhe a evolucao do projeto, metas por modulo e o que ja esta pronto para producao.
+            </p>
+            <div class="cta-buttons">
+              <router-link to="/login" class="button is-white is-medium">
+                <span class="icon"><i class="fas fa-sign-in-alt"></i></span>
+                <span>Entrar</span>
+              </router-link>
+              <router-link to="/catalog" class="button is-light is-outlined is-medium">
+                <span class="icon"><i class="fas fa-box-open"></i></span>
+                <span>Ver catalogo</span>
+              </router-link>
+            </div>
           </div>
-          <div class="column is-4 has-text-right">
-            <div class="box has-background-info has-text-white p-4">
-              <p class="title is-2 has-text-white mb-1">{{ projectProgress }}%</p>
-              <p class="subtitle is-6 has-text-white">{{ completedFeatures }}/{{ totalFeatures }} funcionalidades</p>
+          <div class="column is-5">
+            <div class="glass-card kpi-card">
+              <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
+                <p class="is-size-6 has-text-grey-light">Progresso geral</p>
+                <span class="tag is-info is-light">Atualizado</span>
+              </div>
+              <div class="kpi-number">
+                <span class="kpi-value">{{ projectProgress }}%</span>
+                <span class="kpi-sub">concluido</span>
+              </div>
+              <progress class="progress is-info is-large" :value="projectProgress" max="100">{{ projectProgress }}%</progress>
+              <p class="is-size-6 has-text-grey-light mt-2">
+                {{ completedFeatures }} / {{ totalFeatures }} funcionalidades entregues
+              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section py-5">
+    <section class="section stats-section">
       <div class="container">
         <div class="columns is-multiline">
-          <div
-            v-for="module in moduleStatus"
-            :key="module.name"
-            class="column is-4"
-          >
-            <div class="box status-card">
+          <div v-for="module in moduleStatus" :key="module.name" class="column is-4-desktop is-6-tablet">
+            <div class="glass-card module-card">
               <div class="is-flex is-justify-content-space-between is-align-items-center mb-2">
-                <h4 class="title is-5 mb-0">{{ module.name }}</h4>
+                <h3 class="title is-5 mb-0">{{ module.name }}</h3>
                 <span class="tag" :class="module.tagClass">{{ module.label }}</span>
               </div>
               <p class="is-size-6 has-text-grey">{{ module.done }} / {{ module.total }} entregues</p>
-              <progress class="progress is-small" :class="module.progressClass" :value="module.progress" max="100">
-                {{ module.progress }}%
-              </progress>
+              <div class="pill-bar">
+                <div class="pill-fill" :style="{ width: module.progress + '%', background: module.color }"></div>
+              </div>
+              <div class="is-flex is-justify-content-space-between is-align-items-center mt-2">
+                <span class="is-size-7 has-text-grey">Progresso</span>
+                <span class="is-size-6 has-text-weight-semibold">{{ module.progress }}%</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="hero is-primary is-fullheight-with-navbar">
-      <div class="hero-body">
-        <div class="container has-text-centered">
-          <h1 class="title is-1 mb-6">
-            Portal de Pedidos do Parceiro
-          </h1>
-          <p class="subtitle is-4 mb-6">
-            Plataforma completa para gestão de pedidos entre distribuidores e lojas parceiras
-          </p>
-          <div class="buttons is-centered">
-            <router-link to="/login" class="button is-light is-large">
-              <span class="icon">
-                <i class="fas fa-sign-in-alt"></i>
-              </span>
-              <span>Entrar</span>
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
+    <section class="section highlight-section">
       <div class="container">
-        <h2 class="title is-2 has-text-centered mb-6">
-          <span class="icon has-text-primary"><i class="fas fa-rocket"></i></span>
-          Como Funciona
-        </h2>
-        
         <div class="columns is-multiline">
           <div class="column is-4">
-            <div class="card has-text-centered p-5 feature-card">
-              <div class="card-content">
-                <div class="icon-wrapper mb-4">
-                  <span class="icon is-large has-text-white">
-                    <i class="fas fa-users fa-3x"></i>
-                  </span>
-                </div>
-                <h3 class="title is-4">Administração Completa</h3>
-                <p>
-                  Cadastre produtos com fotos, defina prazos de pagamento e gerencie clientes
-                  com limites personalizados. Acesse relatórios completos e curva ABC.
+            <div class="feature-tile">
+              <div class="feature-icon primary">
+                <i class="fas fa-users-cog"></i>
+              </div>
+              <div>
+                <p class="title is-5 mb-1">Admin e Operador</p>
+                <p class="is-size-6 has-text-grey">
+                  Cadastre produtos, defina prazos e ajuste limites com historico completo.
                 </p>
               </div>
             </div>
           </div>
-
           <div class="column is-4">
-            <div class="card has-text-centered p-5 feature-card">
-              <div class="card-content">
-                <div class="icon-wrapper icon-wrapper-info mb-4">
-                  <span class="icon is-large has-text-white">
-                    <i class="fas fa-cogs fa-3x"></i>
-                  </span>
-                </div>
-                <h3 class="title is-4">Operação Eficiente</h3>
-                <p>
-                  Operadores gerenciam limites comerciais, mantêm o catálogo atualizado
-                  e garantem sincronização com o sistema Winthor.
+            <div class="feature-tile">
+              <div class="feature-icon info">
+                <i class="fas fa-shopping-cart"></i>
+              </div>
+              <div>
+                <p class="title is-5 mb-1">Lojas no comando</p>
+                <p class="is-size-6 has-text-grey">
+                  Pedido rapido, repetir compras e acompanhar status via SSE em tempo real.
                 </p>
               </div>
             </div>
           </div>
-
           <div class="column is-4">
-            <div class="card has-text-centered p-5 feature-card">
-              <div class="card-content">
-                <div class="icon-wrapper icon-wrapper-success mb-4">
-                  <span class="icon is-large has-text-white">
-                    <i class="fas fa-store fa-3x"></i>
-                  </span>
-                </div>
-                <h3 class="title is-4">Pedidos Simplificados</h3>
-                <p>
-                  Lojas parceiras visualizam catálogo, fazem pedidos, acompanham status
-                  e exportam histórico para análise. Interface mobile-friendly.
+            <div class="feature-tile">
+              <div class="feature-icon success">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div>
+                <p class="title is-5 mb-1">Prontos para escala</p>
+                <p class="is-size-6 has-text-grey">
+                  Catalogo publico, exportacoes, dashboard de pendencias e roadmap de notificacoes.
                 </p>
               </div>
             </div>
@@ -127,118 +113,75 @@
       </div>
     </section>
 
-    <section class="section has-background-light">
-      <div class="container">
-        <h2 class="title is-2 has-text-centered mb-6">Perfis de Usuário</h2>
-        
-        <div class="columns">
-          <div class="column is-4">
-            <div class="box">
-              <h4 class="title is-5 has-text-primary">
-                <span class="icon"><i class="fas fa-shield-alt"></i></span>
-                Administrador
-              </h4>
-              <ul class="content">
-                <li>Cadastro completo de produtos</li>
-                <li>Gestão de clientes e limites</li>
-                <li>Definição de prazos de pagamento</li>
-                <li>Relatórios e análises</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="column is-4">
-            <div class="box">
-              <h4 class="title is-5 has-text-info">
-                <span class="icon"><i class="fas fa-user-cog"></i></span>
-                Operador
-              </h4>
-              <ul class="content">
-                <li>Gerenciamento de limites</li>
-                <li>Atualização de catálogo</li>
-                <li>Validação de cadastros</li>
-                <li>Suporte à sincronização</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="column is-4">
-            <div class="box">
-              <h4 class="title is-5 has-text-success">
-                <span class="icon"><i class="fas fa-shopping-cart"></i></span>
-                Loja Parceira
-              </h4>
-              <ul class="content">
-                <li>Navegação no catálogo</li>
-                <li>Realização de pedidos</li>
-                <li>Acompanhamento de status</li>
-                <li>Histórico e exportações</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
+    <section class="section cta-section">
       <div class="container has-text-centered">
-        <h2 class="title is-3 mb-4">Pronto para começar?</h2>
-        <router-link to="/login" class="button is-primary is-large">
-          Acessar o Portal
-        </router-link>
+        <p class="eyebrow is-italic">Experiencia unificada</p>
+        <h2 class="title is-3 mb-3">Pronto para testar?</h2>
+        <p class="subtitle is-6 has-text-grey mb-4">
+          Acesse com seu perfil ou explore o catalogo publico para ver o estado atual do projeto.
+        </p>
+        <div class="buttons is-centered">
+          <router-link to="/login" class="button is-primary is-medium">
+            <span class="icon"><i class="fas fa-user-circle"></i></span>
+            <span>Entrar no portal</span>
+          </router-link>
+          <router-link to="/catalog" class="button is-light is-medium">
+            <span class="icon"><i class="fas fa-eye"></i></span>
+            <span>Ver catalogo</span>
+          </router-link>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 
-// Project progress tracking alinhado ao plano atual (PLANO_DESENVOLVIMENTO.md)
 const totalFeatures = ref(85);
 const completedFeatures = ref(57);
 const projectProgress = computed(() => Math.round((completedFeatures.value / totalFeatures.value) * 100));
 
 const moduleStatus = computed(() => [
   {
-    name: 'Autenticação & Autorização',
+    name: 'Autenticacao & Autorizacao',
     done: 8,
     total: 8,
     label: 'Completo',
-    progressClass: 'is-success',
+    color: 'linear-gradient(90deg, #22c55e, #16a34a)',
     tagClass: 'is-success'
   },
   {
-    name: 'Gestão de Produtos',
+    name: 'Gestao de Produtos',
     done: 11,
     total: 12,
-    label: 'Catálogo robusto + API pública',
-    progressClass: 'is-link',
+    label: 'Catalogo + API publica',
+    color: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
     tagClass: 'is-info'
   },
   {
-    name: 'Gestão de Clientes',
+    name: 'Gestao de Clientes',
     done: 10,
     total: 10,
     label: 'Completo',
-    progressClass: 'is-success',
+    color: 'linear-gradient(90deg, #22c55e, #16a34a)',
     tagClass: 'is-success'
   },
   {
     name: 'Sistema de Pedidos',
     done: 12,
     total: 15,
-    label: 'Histórico e aprovação ativos',
-    progressClass: 'is-primary',
+    label: 'Historico + aprovacao',
+    color: 'linear-gradient(90deg, #06b6d4, #0ea5e9)',
     tagClass: 'is-primary'
   },
   {
     name: 'Total do Projeto',
     done: completedFeatures.value,
     total: totalFeatures.value,
-    label: `${projectProgress.value}% concluído`,
-    progressClass: 'is-info',
-    tagClass: 'is-info'
+    label: `${projectProgress.value}% concluido`,
+    color: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+    tagClass: 'is-link'
   }
 ].map(module => ({
   ...module,
@@ -248,73 +191,148 @@ const moduleStatus = computed(() => [
 
 <style scoped>
 .homepage {
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  background: #0b1221;
+  color: #0f172a;
 }
 
-.card {
-  height: 100%;
-  transition: all 0.3s ease;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+.hero-section {
+  position: relative;
+  padding: 5rem 0 3rem;
+  overflow: hidden;
+  background: radial-gradient(circle at 20% 20%, rgba(99,102,241,0.2), transparent 25%),
+              radial-gradient(circle at 80% 10%, rgba(14,165,233,0.25), transparent 30%),
+              linear-gradient(135deg, #0f172a 0%, #0b1221 45%, #0f172a 100%);
 }
 
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+.hero-layer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+  pointer-events: none;
 }
 
-.feature-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+.hero-content {
+  position: relative;
+  z-index: 2;
 }
 
-.icon-wrapper {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
-  display: flex;
+.eyebrow {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #93c5fd;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(30, 58, 95, 0.4);
+  gap: 0.4rem;
 }
 
-.icon-wrapper-info {
-  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
-  box-shadow: 0 4px 15px rgba(8, 145, 178, 0.4);
+.cta-buttons .button {
+  margin-right: 0.75rem;
 }
 
-.icon-wrapper-success {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  padding: 1.75rem;
+  backdrop-filter: blur(10px);
 }
 
-.box {
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
+.kpi-card .progress {
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.box:hover {
-  border-left-color: #1e3a5f;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.kpi-number {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
 }
 
-.hero.is-primary {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+.kpi-value {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #e0f2fe;
 }
 
-.progress {
-  height: 1.5rem;
-  border-radius: 8px;
+.kpi-sub {
+  font-size: 0.9rem;
+  color: #cbd5f5;
 }
 
-.has-background-info-light {
-  background-color: #f0f9ff !important;
-  border-bottom: 3px solid #0891b2;
+.stats-section {
+  padding: 3rem 0;
 }
 
-.status-card {
-  border: none;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+.module-card {
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.module-card .title {
+  color: #e2e8f0;
+}
+
+.pill-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(226, 232, 240, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.highlight-section {
+  padding: 3rem 0;
+}
+
+.feature-tile {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.feature-icon.primary { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.feature-icon.info { background: linear-gradient(135deg, #0ea5e9, #22d3ee); }
+.feature-icon.success { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+
+.cta-section {
+  padding: 4rem 0 5rem;
+  background: linear-gradient(180deg, #0b1221 0%, #0f172a 60%, #0b1221 100%);
+}
+
+.cta-section .button {
+  margin: 0 0.5rem;
+}
+
+.title,
+.subtitle,
+.box,
+.tag,
+.button {
+  letter-spacing: 0.01em;
 }
 </style>
