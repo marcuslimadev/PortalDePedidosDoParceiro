@@ -1,6 +1,9 @@
 import bcrypt from 'bcryptjs';
+import { fileURLToPath } from 'url';
 import { query } from '../config/database.js';
 import { runMigrations } from '../migrations/run.js';
+
+const __filename = fileURLToPath(import.meta.url);
 
 const adminUser = {
   email: 'admin@portalpedidos.com',
@@ -212,7 +215,7 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
   }
 }
 
-async function runSeed () {
+export async function runSeed () {
   await runMigrations();
   console.log('>> Iniciando carga de dados mock...');
 
@@ -247,12 +250,14 @@ async function runSeed () {
   console.log('- Clientes: loja1@cliente.com, loja2@cliente.com, loja3@cliente.com (senha cliente123)');
 }
 
-runSeed()
-  .then(() => {
-    console.log('Seed finalizado.');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Falha ao executar seed:', error);
-    process.exit(1);
-  });
+if (import.meta.url === `file://${__filename}`) {
+  runSeed()
+    .then(() => {
+      console.log('Seed finalizado.');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Falha ao executar seed:', error);
+      process.exit(1);
+    });
+}

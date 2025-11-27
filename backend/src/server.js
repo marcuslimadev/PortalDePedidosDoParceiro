@@ -10,6 +10,7 @@ import ordersRouter from './routes/orders.js';
 import catalogRouter from './routes/catalog.js';
 import clientsRouter from './routes/clients.js';
 import { runMigrations } from './migrations/run.js';
+import { runSeed } from './scripts/seedMockData.js';
 import { query } from './config/database.js';
 
 dotenv.config();
@@ -86,6 +87,16 @@ async function startServer () {
     // Garantir que a base esteja sempre atualizada em qualquer ambiente (Render/Docker/local)
     await runMigrations();
     await ensureDefaultAdminUser();
+    const existingProducts = await query('SELECT COUNT(*) AS total FROM products');
+    const existingClients = await query("SELECT COUNT(*) AS total FROM users WHERE role = 'loja'");
+    const productsCount = Number(existingProducts.rows[0]?.total || 0);
+    const clientsCount = Number(existingClients.rows[0]?.total || 0);
+    if (productsCount === 0 && clientsCount === 0) {
+      console.log('Nenhum produto/cliente encontrado. Executando seed mock apenas uma vez...');
+      await runSeed();
+    } else {
+      console.log('Seed mock ignorado (dados já existem).');
+    }
   } catch (error) {
     console.error('Falha ao garantir usuário admin padrão:', error);
   }
