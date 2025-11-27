@@ -88,17 +88,14 @@ async function startServer () {
   try {
     // Garantir que a base esteja sempre atualizada em qualquer ambiente (Render/Docker/local)
     await runMigrations();
+    // Sincroniza dados base sempre (idempotente: upsert de admin, operadores, clientes e catálogo mock)
+    await runSeed();
     await ensureDefaultAdminUser();
     const existingProducts = await query('SELECT COUNT(*) AS total FROM products');
     const existingClients = await query("SELECT COUNT(*) AS total FROM users WHERE role = 'loja'");
     const productsCount = Number(existingProducts.rows[0]?.total || 0);
     const clientsCount = Number(existingClients.rows[0]?.total || 0);
-    if (productsCount === 0 && clientsCount === 0) {
-      console.log('Nenhum produto/cliente encontrado. Executando seed mock apenas uma vez...');
-      await runSeed();
-    } else {
-      console.log('Seed mock ignorado (dados já existem).');
-    }
+    console.log(`Seed sincronizado. Produtos: ${productsCount}, clientes: ${clientsCount}`);
   } catch (error) {
     console.error('Falha ao garantir usuário admin padrão:', error);
   }
@@ -109,3 +106,4 @@ async function startServer () {
 }
 
 startServer();
+
