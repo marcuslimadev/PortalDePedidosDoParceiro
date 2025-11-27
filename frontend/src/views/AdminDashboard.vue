@@ -438,6 +438,22 @@
                 </div>
               </div>
             </div>
+            <div class="box is-light mt-3">
+              <p class="label is-size-7">Adicionar campo livre</p>
+              <div class="columns is-mobile">
+                <div class="column is-5">
+                  <input class="input is-small" v-model="customFieldKey" placeholder="nome_campo">
+                </div>
+                <div class="column is-5">
+                  <input class="input is-small" v-model="customFieldValue" placeholder="valor">
+                </div>
+                <div class="column is-2">
+                  <button class="button is-link is-small is-fullwidth" @click="addCustomField">
+                    <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         <footer class="modal-card-foot is-justify-content-space-between">
@@ -473,85 +489,326 @@ const searchTerm = ref('');
 const feedback = reactive({ message: '', type: 'is-primary' });
 const showWizard = ref(false);
 const wizardStep = ref(1);
+const customFieldKey = ref('');
+const customFieldValue = ref('');
 const wizardSections = [
   {
-    title: 'Identificacao e Classificacao',
-    description: 'Dados principais do produto no Winthor',
+    title: 'Identificacao basica',
+    description: 'Campos essenciais do produto',
     fields: [
-      { key: 'codfornec', label: 'Cod. Fornecedor' },
+      { key: 'rid', label: 'RID' },
+      { key: 'codprod', label: 'Cod. Produto' },
+      { key: 'descricao', label: 'Descricao' },
+      { key: 'codfab', label: 'Cod. Fabrica' },
+      { key: 'dv', label: 'Digito verificador' },
+      { key: 'numoriginal', label: 'Num. original' },
+      { key: 'codprodprinc', label: 'Cod. prod. principal' },
+      { key: 'codprodmaster', label: 'Cod. prod. master' },
+      { key: 'registropeca', label: 'Registro peca' },
+      { key: 'obs', label: 'Observacao' },
+      { key: 'obs2', label: 'Observacao 2' },
+      { key: 'descricao1', label: 'Descricao 1' },
+      { key: 'descricao2', label: 'Descricao 2' },
+      { key: 'descricao3', label: 'Descricao 3' },
+      { key: 'descricao4', label: 'Descricao 4' },
+      { key: 'descricao5', label: 'Descricao 5' },
+      { key: 'descricao6', label: 'Descricao 6' },
+      { key: 'descricao7', label: 'Descricao 7' }
+    ]
+  },
+  {
+    title: 'Classificacao mercadologica',
+    description: 'Fornecedor, departamento, secao, marca, categoria',
+    fields: [
+      { key: 'codfornec', label: 'Cod. fornecedor' },
       { key: 'fornecedor', label: 'Fornecedor' },
-      { key: 'codepto', label: 'Cod. Depto' },
-      { key: 'codsec', label: 'Cod. Secao' },
-      { key: 'codmarca', label: 'Cod. Marca' },
-      { key: 'codcategoria', label: 'Cod. Categoria' },
-      { key: 'codlinhaprod', label: 'Cod. Linha Prod.' },
-      { key: 'tipomerc', label: 'Tipo Merc.' },
-      { key: 'naturezaproduto', label: 'Natureza Produto' },
+      { key: 'codepto', label: 'Cod. departamento' },
+      { key: 'codsec', label: 'Cod. secao' },
+      { key: 'codmarca', label: 'Cod. marca' },
+      { key: 'codsubmarca', label: 'Cod. submarca' },
+      { key: 'codcategoria', label: 'Cod. categoria' },
+      { key: 'codsubcategoria', label: 'Cod. subcategoria' },
+      { key: 'codlinhaprod', label: 'Cod. linha produto' },
+      { key: 'tipomerc', label: 'Tipo mercadoria' },
+      { key: 'naturezaproduto', label: 'Natureza produto' },
+      { key: 'coddistrb', label: 'Cod. distribuidora' },
+      { key: 'tipoprod', label: 'Tipo produto' },
+      { key: 'tipocustotransf', label: 'Tipo custo transf' },
       { key: 'status', label: 'Status' }
     ]
   },
   {
-    title: 'Embalagens e Fiscal',
-    description: 'Unidades, pesos e dados fiscais',
+    title: 'Unidades e embalagem',
+    description: 'Unidades de venda/estoque e volumes',
     fields: [
       { key: 'embalagem', label: 'Embalagem' },
-      { key: 'unidade', label: 'Unidade Padrao' },
-      { key: 'qtunit', label: 'Qtde Unidade' },
-      { key: 'embalagemmaster', label: 'Embalagem Master' },
-      { key: 'unidademaster', label: 'Unidade Master' },
-      { key: 'qtunitcx', label: 'Qtde Unit CX' },
-      { key: 'pesoliq', label: 'Peso Liquido' },
-      { key: 'pesobruto', label: 'Peso Bruto' },
+      { key: 'unidade', label: 'Unidade' },
+      { key: 'qtunit', label: 'Qtde unidade' },
+      { key: 'embalagemmaster', label: 'Embalagem master' },
+      { key: 'unidademaster', label: 'Unidade master' },
+      { key: 'qtunitcx', label: 'Qtde unid. caixa' },
+      { key: 'unidadepadrao', label: 'Unidade padrao' },
+      { key: 'idembalagem', label: 'Id embalagem' },
+      { key: 'codprodembalagem', label: 'Cod. prod. embalagem' },
+      { key: 'codformatopapel', label: 'Formato papel' },
+      { key: 'gramatura', label: 'Gramatura' },
+      { key: 'descpapel', label: 'Descricao papel' }
+    ]
+  },
+  {
+    title: 'Codigos de barras e auxiliares',
+    description: 'GTIN e codigos auxiliares',
+    fields: [
+      { key: 'gtincodauxiliar', label: 'GTIN cod. auxiliar' },
+      { key: 'gtincodauxiliar2', label: 'GTIN cod. auxiliar 2' },
+      { key: 'gtincodauxiliartrib', label: 'GTIN cod. auxiliar trib.' },
+      { key: 'codauxiliar', label: 'Cod. auxiliar' },
+      { key: 'codauxiliar2', label: 'Cod. auxiliar 2' },
+      { key: 'codauxiliartrib', label: 'Cod. auxiliar trib.' },
+      { key: 'codprodfornec', label: 'Cod. produto fornecedor' },
+      { key: 'codinterno', label: 'Cod. interno' },
+      { key: 'codprodsintegra', label: 'Cod. prod. sintegra' }
+    ]
+  },
+  {
+    title: 'Comercial e precos',
+    description: 'Margens, precos maximos e comissoes',
+    fields: [
+      { key: 'revenda', label: 'Revenda' },
+      { key: 'seqtabpreco', label: 'Seq. tabela preco' },
+      { key: 'margemmin', label: 'Margem minima' },
+      { key: 'precofixo', label: 'Preco fixo' },
+      { key: 'precomaxconsumtab', label: 'Preco max. consumidor (tabela)' },
+      { key: 'precomaxconsum', label: 'Preco max. consumidor' },
+      { key: 'precofabrica', label: 'Preco fabrica' },
+      { key: 'precicestrangeira', label: 'Preco custo estrangeira' },
+      { key: 'percvenda', label: '% venda' },
+      { key: 'pcomext1', label: '% comissao externa 1' },
+      { key: 'pcomint1', label: '% comissao interna 1' },
+      { key: 'pcomrep1', label: '% comissao representante 1' },
+      { key: 'tipocomissao', label: 'Tipo comissao' },
+      { key: 'classecomissao', label: 'Classe comissao' },
+      { key: 'percebonificvenda', label: '% bonificacao venda' },
+      { key: 'vlbonific', label: 'Valor bonificacao' },
+      { key: 'percbon', label: '% bonificacao' }
+    ]
+  },
+  {
+    title: 'Logistica e estoque',
+    description: 'Regras de compra, lote e validade',
+    fields: [
+      { key: 'codprazoent', label: 'Cod. prazo entrega' },
+      { key: 'multiplo', label: 'Multiplo venda' },
+      { key: 'multiplocompras', label: 'Multiplo compras' },
+      { key: 'qtminsugcompra', label: 'Qtde minima compra' },
+      { key: 'qtdeMaxSeparPedido', label: 'Qtde max separacao' },
+      { key: 'aceitavendafracao', label: 'Aceita fracao' },
+      { key: 'checarmultiplovendabnf', label: 'Checar multiplo bonificado' },
+      { key: 'conferencocheckout', label: 'Confere checkout' },
+      { key: 'prazomaxvalidade', label: 'Prazo max validade' },
+      { key: 'prazominvalidade', label: 'Prazo min validade' },
+      { key: 'prazoval', label: 'Prazo validade padrao' },
+      { key: 'numdiasvalidademin', label: 'Dias validade minima' },
+      { key: 'controlavalidadedolote', label: 'Controla validade lote' },
+      { key: 'dtinicontlote', label: 'Data inicio controle lote' },
+      { key: 'estoqueporlote', label: 'Estoque por lote' },
+      { key: 'proxnumlote', label: 'Prox numero lote' },
+      { key: 'prefixolote', label: 'Prefixo lote' },
+      { key: 'induzlote', label: 'Induz lote' },
+      { key: 'numlote', label: 'Numero lote' },
+      { key: 'pesobruto', label: 'Peso bruto' },
+      { key: 'pesoliq', label: 'Peso liquido' },
+      { key: 'pesoliqdi', label: 'Peso liquido DI' },
+      { key: 'pesobruToMaster', label: 'Peso bruto master' },
+      { key: 'pesoembalagem', label: 'Peso embalagem' },
+      { key: 'pesopesa', label: 'Peso peca' },
+      { key: 'pesovariavel', label: 'Peso variavel' },
+      { key: 'pesominimo', label: 'Peso minimo' },
+      { key: 'pesomaximo', label: 'Peso maximo' },
+      { key: 'pesobrutofrete', label: 'Peso bruto frete' },
+      { key: 'valortaraporpeca', label: 'Valor tara peca' },
+      { key: 'taraporpeca', label: 'Tara por peca' },
+      { key: 'percperdakw', label: '% perda kg' },
+      { key: 'percdiferencakgfrio', label: '% diferenca kg frio' },
+      { key: 'fatorconversaokg', label: 'Fator conversao kg' },
+      { key: 'tipostoque', label: 'Tipo estoque' },
+      { key: 'classeestoque', label: 'Classe estoque' },
+      { key: 'sugvenda', label: 'Sugestao venda' },
+      { key: 'tipomedicamento', label: 'Tipo medicamento' },
+      { key: 'tipodescarga', label: 'Tipo descarga' },
+      { key: 'tipovolumedescarga', label: 'Tipo volume descarga' },
+      { key: 'freteespecial', label: 'Frete especial' }
+    ]
+  },
+  {
+    title: 'Dimensoes e WMS',
+    description: 'Dados para armazenagem e palete',
+    fields: [
+      { key: 'usawms', label: 'Usa WMS' },
+      { key: 'modulo', label: 'Modulo WMS' },
+      { key: 'volume', label: 'Volume' },
+      { key: 'altura', label: 'Altura' },
+      { key: 'diametroexterno', label: 'Diametro externo' },
+      { key: 'diametrointerno', label: 'Diametro interno' },
+      { key: 'litragem', label: 'Litragem' },
+      { key: 'numero', label: 'Numero' },
+      { key: 'qtmetros', label: 'Qtde metros' },
+      { key: 'rua', label: 'Rua' },
+      { key: 'codagrupmapasep', label: 'Cod. agrup. mapa separacao' },
+      { key: 'codgrade', label: 'Cod. grade' },
+      { key: 'colunagrade', label: 'Coluna grade' },
+      { key: 'tamanhopeca', label: 'Tamanho peca' },
+      { key: 'lastropal', label: 'Lastro palete' },
+      { key: 'alturapal', label: 'Altura palete' },
+      { key: 'alturatotal', label: 'Altura total' },
+      { key: 'tipoalturapalete', label: 'Tipo altura palete' },
+      { key: 'qttotpal', label: 'Qtde total palete' }
+    ]
+  },
+  {
+    title: 'Informacoes tecnicas e adicionais',
+    description: 'Ficha tecnica, literatura e concentracao',
+    fields: [
+      { key: 'enviainftecnicanfe', label: 'Envia inf. tecnica NFe' },
+      { key: 'codtablit', label: 'Cod. tabela literatura' },
+      { key: 'informacoestecnicas', label: 'Informacoes tecnicas' },
+      { key: 'dadostecnicos', label: 'Dados tecnicos' },
+      { key: 'codgrulit', label: 'Cod. grupo literatura' },
+      { key: 'destaquefichatecnica', label: 'Destaque ficha tecnica' },
+      { key: 'dirfotoprod', label: 'Diretorio fotos' },
+      { key: 'seqpagina', label: 'Sequencial pagina' },
+      { key: 'numpag', label: 'Numero pagina' },
+      { key: 'letrapagina', label: 'Letra pagina' },
+      { key: 'usaclassificacao', label: 'Usa classificacao' },
+      { key: 'vlmaodeobra', label: 'Valor mao de obra' },
+      { key: 'concentracao', label: 'Concentracao' }
+    ]
+  },
+  {
+    title: 'Fiscal e tributario',
+    description: 'NCM, IPI, PIS/COFINS e observacoes fiscais',
+    fields: [
       { key: 'codncmex', label: 'NCM' },
       { key: 'nbm', label: 'NBM' },
       { key: 'extipi', label: 'EXTIPI' },
-      { key: 'gtincodauxiliar', label: 'GTIN Auxiliar' },
-      { key: 'codaauxiliar', label: 'Cod. Auxiliar' },
-      { key: 'codaauxiliartrib', label: 'Cod. Auxiliar Trib.' }
-    ]
-  },
-  {
-    title: 'Complementos e Referencias',
-    description: 'Relacionamentos e observacoes',
-    fields: [
-      { key: 'codfab', label: 'Cod. Fabricante' },
-      { key: 'codprodmaster', label: 'Cod. Produto Master' },
-      { key: 'codprodprinc', label: 'Cod. Produto Principal' },
-      { key: 'codsubmarca', label: 'Cod. Submarca' },
-      { key: 'unidadepadrao', label: 'Unidade Padrao' },
-      { key: 'informacoestecnicas', label: 'Informacoes Tecnicas' },
-      { key: 'dadosTecnicos', label: 'Dados Tecnicos' },
-      { key: 'codprodfornec', label: 'Cod. Produto Fornec.' },
-      { key: 'codinfnutri', label: 'Cod. Info Nutricional' },
-      { key: 'obs', label: 'Observacoes' }
-    ]
-  },
-  {
-    title: 'Fiscal e Comercial',
-    description: 'Regras de tributacao e venda',
-    fields: [
-      { key: 'tributacao', label: 'Tributacao detalhada' },
-      { key: 'tipoprod', label: 'Tipo Produto' },
-      { key: 'classe', label: 'Classe' },
-      { key: 'classevenda', label: 'Classe Venda' },
-      { key: 'classecompra', label: 'Classe Compra' },
-      { key: 'percbofins', label: '% Cofins' },
-      { key: 'percpis', label: '% Pis' },
+      { key: 'unidadetrib', label: 'Unidade tributavel' },
+      { key: 'unidadetribex', label: 'Unidade trib. exterior' },
+      { key: 'fatorconvtrib', label: 'Fator conv. trib.' },
+      { key: 'fatorconvtribex', label: 'Fator conv. trib. ext.' },
+      { key: 'classificfiscal', label: 'Classificacao fiscal' },
+      { key: 'codunidmedidanf', label: 'Cod. unid. medida NF' },
+      { key: 'codagregacao', label: 'Cod. agregacao' },
+      { key: 'usacodagregacao', label: 'Usa cod. agregacao' },
+      { key: 'percaliqext', label: 'Aliquota externa' },
+      { key: 'percalqint', label: 'Aliquota interna' },
+      { key: 'pericm', label: '% ICMS' },
+      { key: 'pericmsantecipado', label: '% ICMS antecipado' },
+      { key: 'percicmred', label: '% red. base ICMS' },
       { key: 'percipi', label: '% IPI' },
-      { key: 'percdifaliq', label: '% Dif. Aliq.' },
-      { key: 'prazomaxvenda', label: 'Prazo max. venda' }
+      { key: 'perciva', label: '% IVA/MVA' },
+      { key: 'perpis', label: '% PIS' },
+      { key: 'percofins', label: '% COFINS' },
+      { key: 'percoutrasdesp', label: '% outras despesas' },
+      { key: 'percdespadicional', label: '% desp. adicional' },
+      { key: 'percsuframa', label: '% SUFRAMA' },
+      { key: 'aliquotacif', label: 'Aliquota CIF' },
+      { key: 'imunetrib', label: 'Imune tributacao' },
+      { key: 'ob scontxcampo', label: 'Obs contab. campo' },
+      { key: 'obsfiscoxcampo', label: 'Obs fisco campo' },
+      { key: 'obscontxttexto', label: 'Obs contab. texto' },
+      { key: 'obsfiscoxtexto', label: 'Obs fisco texto' },
+      { key: 'cestabasicalegis', label: 'Cesta basica legis' }
     ]
   },
   {
-    title: 'Auditoria e Controle',
-    description: 'Responsaveis e datas',
+    title: 'Importacao e custos',
+    description: 'Dados de importacao e frete',
     fields: [
-      { key: 'codfunccadastro', label: 'Func. cadastro' },
-      { key: 'codfuncultalter', label: 'Func. ultima alteracao' },
+      { key: 'importado', label: 'Importado' },
+      { key: 'conciliaimportacao', label: 'Concilia importacao' },
+      { key: 'usalicencaimportacao', label: 'Usa licenca importacao' },
+      { key: 'moeda', label: 'Moeda' },
+      { key: 'dtdolar', label: 'Data dolar' },
+      { key: 'custorep', label: 'Custo reposicao' },
+      { key: 'custoreptab', label: 'Custo reposicao tabela' },
+      { key: 'percfrete', label: '% frete CIF' },
+      { key: 'percfretefob', label: '% frete FOB' },
+      { key: 'percoutrasdesp', label: '% outras despesas' },
+      { key: 'percdespadicional', label: '% desp adicional' },
+      { key: 'percsuframa', label: '% SUFRAMA' },
+      { key: 'tipoembarqueimp', label: 'Tipo embarque importacao' },
+      { key: 'paisorigem', label: 'Pais origem' }
+    ]
+  },
+  {
+    title: 'Datas e usuarios',
+    description: 'Controle de criacao e alteracao',
+    fields: [
       { key: 'dtcadastro', label: 'Data cadastro' },
+      { key: 'codfunccadastro', label: 'Func. cadastro' },
       { key: 'dtultalter', label: 'Data ultima alteracao' },
-      { key: 'dtexclusao', label: 'Data exclusao' },
-      { key: 'obs2', label: 'Obs internas' }
+      { key: 'codfuncultalter', label: 'Func. ult. alteracao' },
+      { key: 'dtultaltcad', label: 'Data ult. alt. cadastro' },
+      { key: 'codfuncultaltcad', label: 'Func. ult. alt. cadastro' },
+      { key: 'dtultaltcom', label: 'Data ult. alt. comercial' },
+      { key: 'dtexclusao', label: 'Data exclusao' }
+    ]
+  },
+  {
+    title: 'Saude e farmacia',
+    description: 'Campos ANVISA/SNGPC',
+    fields: [
+      { key: 'anvisa', label: 'Registro ANVISA' },
+      { key: 'simpro', label: 'Codigo SIMPRO' },
+      { key: 'pmpfmedicamento', label: 'PMPF' },
+      { key: 'registromsmed', label: 'Registro MS' },
+      { key: 'codmotisencaoanvisa', label: 'Cod. isencao ANVISA' },
+      { key: 'farmaciapopular', label: 'Farmacia popular' },
+      { key: 'psicotropico', label: 'Psicotropico' },
+      { key: 'retinoico', label: 'Retinoico' },
+      { key: 'usoprolongadosngpc', label: 'Uso prolongado SNGPC' },
+      { key: 'tipotributmedic', label: 'Tipo tribut. medicamento' },
+      { key: 'codsazonalidademed', label: 'Cod. sazonalidade med' },
+      { key: 'codlinhaprazo', label: 'Cod. linha prazo' },
+      { key: 'codprincipativo', label: 'Cod. principio ativo 1' },
+      { key: 'codprincipativo2', label: 'Cod. principio ativo 2' },
+      { key: 'formaesterilizacao', label: 'Forma esterilizacao' },
+      { key: 'codsalmed', label: 'Cod. sais medicamentosos' }
+    ]
+  },
+  {
+    title: 'E-commerce e integracoes',
+    description: 'Campos para canais online',
+    fields: [
+      { key: 'enviaecommerce', label: 'Envia ecommerce' },
+      { key: 'nomeecommerce', label: 'Nome ecommerce' },
+      { key: 'tituloecommerce', label: 'Titulo ecommerce' },
+      { key: 'subtituloecommerce', label: 'Subtitulo ecommerce' },
+      { key: 'diretoriofotos', label: 'Diretorio fotos' },
+      { key: 'exibesemestoqueecommerce', label: 'Exibe sem estoque' },
+      { key: 'codcamplomadee', label: 'Cod. campo loja madee' },
+      { key: 'codadwords', label: 'Cod. adwords' },
+      { key: 'linkid', label: 'Link ID' },
+      { key: 'tipointegracaob2b', label: 'Tipo integracao B2B' },
+      { key: 'usaecommerceunilever', label: 'Usa ecommerce Unilever' },
+      { key: 'embvendaecommerceunilever', label: 'Emb. venda Unilever' },
+      { key: 'utilizaintegracaokibon', label: 'Integracao Kibon' },
+      { key: 'fatorconversaobionexo', label: 'Fator conversao Bionexo' }
+    ]
+  },
+  {
+    title: 'Outros controles e riscos',
+    description: 'Campos diversos de risco e patrimonio',
+    fields: [
+      { key: 'codcor', label: 'Cod. cor' },
+      { key: 'controlapatrimonio', label: 'Controla patrimonio' },
+      { key: 'controladoibama', label: 'Controlado IBAMA' },
+      { key: 'codrisco', label: 'Cod. risco' },
+      { key: 'codonu', label: 'Cod. ONU' },
+      { key: 'codacondicionamento', label: 'Cod. acondicionamento' },
+      { key: 'apto', label: 'Apto' },
+      { key: 'myfrota', label: 'MyFrota' },
+      { key: 'fldselecao', label: 'Campo selecao' }
     ]
   }
 ];
@@ -739,6 +996,13 @@ const updateWinthorField = (key, value) => {
     ...productForm.winthor_data,
     [key]: value
   };
+};
+
+const addCustomField = () => {
+  if (!customFieldKey.value) return;
+  updateWinthorField(customFieldKey.value, customFieldValue.value);
+  customFieldKey.value = '';
+  customFieldValue.value = '';
 };
 
 const handleDelete = async (product) => {
@@ -1005,5 +1269,10 @@ const formatDateTime = (value) => {
 
 .wizard-form {
   min-height: 240px;
+}
+
+.box.is-light {
+  background: #f8fafc;
+  border-radius: 10px;
 }
 </style>
