@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function runMigrations () {
+export async function runMigrations () {
   const client = await getClient();
 
   try {
@@ -31,6 +31,8 @@ async function runMigrations () {
   }
 }
 
-runMigrations()
-  .then(() => process.exit(0))
-  .catch(() => process.exit(1));
+if (import.meta.url === `file://${__filename}`) {
+  runMigrations()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}

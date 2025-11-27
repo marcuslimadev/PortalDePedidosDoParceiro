@@ -1,11 +1,6 @@
 import bcrypt from 'bcryptjs';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { getClient, query } from '../config/database.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { query } from '../config/database.js';
+import { runMigrations } from '../migrations/run.js';
 
 const adminUser = {
   email: 'admin@portalpedidos.com',
@@ -217,56 +212,8 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
   }
 }
 
-async function ensureMigrations () {
-  console.log('>> Checando estrutura do banco...');
-  const client = await getClient();
-  try {
-    const usersTable = await client.query("SELECT to_regclass('public.users') AS reg");
-    const usersExists = !!usersTable.rows[0]?.reg;
-
-    if (!usersExists) {
-      console.log('Tabela users nao encontrada. Executando todas as migrations...');
-      const migrationFiles = fs
-        .readdirSync(path.join(__dirname, '../migrations'))
-        .filter(file => file.endsWith('.sql'))
-        .sort();
-
-      for (const file of migrationFiles) {
-        const sql = fs.readFileSync(path.join(__dirname, '../migrations', file), 'utf8');
-        console.log(`-- Migration ${file}`);
-        await client.query(sql);
-      }
-      console.log('Migrations basicas aplicadas.');
-      return;
-    }
-
-    const hasCnpj = await client.query(`
-      SELECT 1 FROM information_schema.columns
-       WHERE table_name = 'users' AND column_name = 'cnpj'
-       LIMIT 1
-    `);
-
-    if (hasCnpj.rowCount === 0) {
-      console.log('Campos de cliente nao encontrados. Aplicando migrations 005 e 006...');
-      for (const file of ['005_alter_users_add_client_fields.sql', '006_create_client_credit_history.sql']) {
-        const sql = fs.readFileSync(path.join(__dirname, '../migrations', file), 'utf8');
-        console.log(`-- Migration ${file}`);
-        await client.query(sql);
-      }
-      console.log('Migrations de cliente aplicadas.');
-    } else {
-      console.log('Estrutura ja contem campos de cliente. Nenhuma migration aplicada.');
-    }
-  } catch (error) {
-    console.error('Falha ao checar/aplicar migrations:', error);
-    process.exit(1);
-  } finally {
-    client.release();
-  }
-}
-
 async function runSeed () {
-  await ensureMigrations();
+  await runMigrations();
   console.log('>> Iniciando carga de dados mock...');
 
   const admin = await upsertUser(adminUser);
