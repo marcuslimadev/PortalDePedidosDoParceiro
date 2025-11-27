@@ -230,10 +230,7 @@ export const setClientAccess = async (req, res) => {
   }
 
   try {
-    const existing = await query(
-      `SELECT id, role FROM users WHERE id = $1 AND role = 'loja'`,
-      [id]
-    );
+    const existing = await query('SELECT id, role FROM users WHERE id = $1 AND role = \'loja\'', [id]);
 
     if (existing.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente não encontrado para acesso' });
