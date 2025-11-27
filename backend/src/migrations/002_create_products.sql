@@ -1,7 +1,7 @@
 -- Migration: Create products table
 -- Created: 2025-11-20
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id SERIAL PRIMARY KEY,
   codigo VARCHAR(50) NOT NULL UNIQUE,
   descricao TEXT NOT NULL,
@@ -14,8 +14,8 @@ CREATE TABLE products (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_products_descricao ON products USING gin (to_tsvector('portuguese', descricao));
-CREATE INDEX idx_products_categoria ON products (categoria);
+CREATE INDEX IF NOT EXISTS idx_products_descricao ON products USING gin (to_tsvector('portuguese', descricao));
+CREATE INDEX IF NOT EXISTS idx_products_categoria ON products (categoria);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_products_updated_at()
