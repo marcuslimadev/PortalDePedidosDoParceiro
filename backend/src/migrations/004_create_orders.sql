@@ -1,9 +1,14 @@
 -- Migration: Create orders and order_items tables
 -- Created: 2025-11-19
 
-CREATE TYPE order_status AS ENUM ('pendente', 'aprovado', 'cancelado');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status') THEN
+    CREATE TYPE order_status AS ENUM ('pendente', 'aprovado', 'cancelado');
+  END IF;
+END $$;
 
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
   loja_id INTEGER NOT NULL REFERENCES users(id),
   status order_status NOT NULL DEFAULT 'pendente',
@@ -14,7 +19,7 @@ CREATE TABLE orders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
   id SERIAL PRIMARY KEY,
   order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_id INTEGER NOT NULL REFERENCES products(id),
@@ -24,5 +29,5 @@ CREATE TABLE order_items (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_orders_loja_status ON orders(loja_id, status);
-CREATE INDEX idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_loja_status ON orders(loja_id, status);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
