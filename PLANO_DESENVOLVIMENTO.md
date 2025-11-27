@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 65% concluído (55/85 funcionalidades)
+## 📊 Status do Projeto: 67% concluído (57/85 funcionalidades)
 
 ---
 
@@ -47,7 +47,7 @@
 - [x] Validação de CNPJ/IE
 - [x] Status do cliente (ativo/inativo/bloqueado)
 
-## 5. Sistema de Pedidos (12/15 - 80%)
+## 5. Sistema de Pedidos (13/15 - 87%)
 - [x] Modelo de dados: pedidos, itens_pedido
 - [x] API de criação de pedido
 - [x] Carrinho de compras (frontend)
@@ -62,7 +62,7 @@
 - [x] Aprovação de pedidos (workflow)
 - [x] Exportação de pedidos para Excel
 - [ ] Notificações de status (email/sistema)
-- [ ] Dashboard de pedidos em aberto
+- [x] Dashboard de pedidos em aberto
 
 ## 6. Integração Winthor (2/8 - 25%)
 - [ ] API de sincronização bidirecional
@@ -119,7 +119,7 @@
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
 | Gestão de Produtos | 11/12 (92%) | 🟡 Em andamento |
 | Gestão de Clientes | 10/10 (100%) | ✅ Completo |
-| Sistema de Pedidos | 12/15 (80%) | 🟡 Em andamento |
+| Sistema de Pedidos | 13/15 (87%) | 🟡 Em andamento |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
 | Relatórios & Analytics | 2/9 (22%) | 🟡 Em andamento |
 | UX & Mobile | 3/6 (50%) | 🟡 Em andamento |
@@ -132,7 +132,7 @@
 
 ## 🎯 Próximas Prioridades (Sprint 1)
 
-1. **Sistema de Pedidos** - notificações e dashboard em aberto
+1. **Sistema de Pedidos** - notificações de status + condições de pagamento
 2. **Relatórios & Analytics** - começar curvas ABC e dashboards
 3. **Segurança & Compliance** - rate limiting, auditoria e backup
 

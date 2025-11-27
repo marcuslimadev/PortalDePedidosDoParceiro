@@ -1,5 +1,6 @@
 import { getClient, query } from '../config/database.js';
 import { eventBus } from '../events/eventBus.js';
+import { notifyUsers, notifyUser } from '../services/notificationService.js';
 
 const validateItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) {
@@ -145,6 +146,12 @@ export const createOrder = async (req, res) => {
       type: 'order.created',
       lojaId: req.user.id,
       payload: response
+    });
+
+    await notifyUsers(['operador', 'admin'], {
+      type: 'order.created',
+      title: `Novo pedido #${order.id}`,
+      body: `Pedido registrado pela loja ${lojaPerfil.nome} no valor de R$ ${total.toFixed(2)}`
     });
 
     res.status(201).json({ order: response });
@@ -296,6 +303,12 @@ export const updateOrderStatus = async (req, res) => {
       type: 'order.status_updated',
       lojaId: order.loja_id,
       payload: response
+    });
+
+    await notifyUser(order.loja_id, {
+      type: 'order.status_updated',
+      title: `Pedido #${order.id} atualizado`,
+      body: `Status agora é ${status}`
     });
 
     res.json({ order: response });

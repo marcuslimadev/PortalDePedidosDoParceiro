@@ -12,6 +12,7 @@ import clientsRouter from './routes/clients.js';
 import { runMigrations } from './migrations/run.js';
 import { runSeed } from './scripts/seedMockData.js';
 import { query } from './config/database.js';
+import notificationsRouter from './routes/notifications.js';
 
 dotenv.config();
 
@@ -79,6 +80,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/clients', clientsRouter);
+app.use('/api/notifications', notificationsRouter);
 
 const port = process.env.PORT || 3000;
 
