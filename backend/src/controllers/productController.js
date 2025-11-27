@@ -36,6 +36,29 @@ export const listProducts = async (req, res) => {
   }
 };
 
+export const listPublicCatalog = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const params = [];
+    let sql = `
+      SELECT id, codigo, descricao, preco, unidade, tributacao, estoque, categoria
+      FROM products`;
+
+    if (q) {
+      params.push(`%${q.toLowerCase()}%`);
+      sql += ' WHERE LOWER(codigo) LIKE $1 OR LOWER(descricao) LIKE $1';
+    }
+
+    sql += ' ORDER BY descricao ASC LIMIT 200';
+
+    const result = await query(sql, params);
+    res.json({ products: result.rows });
+  } catch (error) {
+    console.error('Erro ao listar catálogo público:', error);
+    res.status(500).json({ error: 'Erro ao buscar catálogo' });
+  }
+};
+
 export const createProduct = async (req, res) => {
   try {
     const validationError = validateProductPayload(req.body);
