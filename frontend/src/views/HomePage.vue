@@ -196,7 +196,7 @@ import { ref, computed } from 'vue';
 
 // Project progress tracking alinhado ao plano atual (PLANO_DESENVOLVIMENTO.md)
 const totalFeatures = ref(85);
-const completedFeatures = ref(47);
+const completedFeatures = ref(48);
 const projectProgress = computed(() => Math.round((completedFeatures.value / totalFeatures.value) * 100));
 
 const moduleStatus = computed(() => [
@@ -210,9 +210,9 @@ const moduleStatus = computed(() => [
   },
   {
     name: 'Gestão de Produtos',
-    done: 10,
+    done: 11,
     total: 12,
-    label: 'Catálogo robusto',
+    label: 'Catálogo robusto + API pública',
     progressClass: 'is-link',
     tagClass: 'is-info'
   },

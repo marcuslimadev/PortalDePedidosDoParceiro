@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 55% concluído (47/85 funcionalidades)
+## 📊 Status do Projeto: 56% concluído (48/85 funcionalidades)
 
 ---
 
@@ -21,7 +21,7 @@
 - [x] Recuperação de senha
 - [x] Autenticação 2FA (opcional)
 
-## 3. Gestão de Produtos (10/12 - 83%)
+## 3. Gestão de Produtos (11/12 - 92%)
 - [x] Modelo de dados: produtos (código, descrição, preço, unidade, tributação)
 - [x] CRUD de produtos (backend)
 - [x] Upload e galeria de fotos por produto
@@ -33,7 +33,7 @@
 - [x] Histórico de alterações de preços
 - [x] Controle de estoque básico
 - [x] Categorização de produtos
-- [ ] API pública de catálogo para lojas
+- [x] API pública de catálogo para lojas
 
 ## 4. Gestão de Clientes (5/10 - 50%)
 - [x] Modelo de dados: clientes (CNPJ, IE, rota, segmentação Winthor)
@@ -117,7 +117,7 @@
 |--------|-----------|--------|
 | Infraestrutura & Base | 5/5 (100%) | ✅ Completo |
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
-| Gestão de Produtos | 10/12 (83%) | 🟡 Em andamento |
+| Gestão de Produtos | 11/12 (92%) | 🟡 Em andamento |
 | Gestão de Clientes | 5/10 (50%) | 🟡 Em andamento |
 | Sistema de Pedidos | 8/15 (53%) | 🟡 Em andamento |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
@@ -126,7 +126,7 @@
 | Segurança & Compliance | 2/7 (29%) | 🟡 Em andamento |
 | DevOps & Qualidade | 2/5 (40%) | 🟡 Em andamento |
 
-**Total Geral: 47/85 funcionalidades (55%)**
+**Total Geral: 48/85 funcionalidades (56%)**
 
 ---
 

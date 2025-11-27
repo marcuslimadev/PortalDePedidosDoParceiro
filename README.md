@@ -32,6 +32,7 @@ npm run dev
 Endpoints disponíveis:
 - `GET /` → teste rápido
 - `GET /api/health` → verifica conexão com o Postgres (necessita banco configurado)
+- `GET /api/catalog` → catálogo público de produtos com busca opcional
 
 ### Frontend
 
