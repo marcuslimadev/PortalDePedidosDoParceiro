@@ -10,11 +10,28 @@ on:
 
 jobs:
   backend:
-    name: Backend lint
+    name: Backend lint and test
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
     defaults:
       run:
         working-directory: backend
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,6 +48,13 @@ jobs:
 
       - name: Lint
         run: npm run lint
+      
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+          JWT_SECRET: test-jwt-secret-for-ci
+          NODE_ENV: test
+        run: npm test
 
   frontend:
     name: Frontend build
