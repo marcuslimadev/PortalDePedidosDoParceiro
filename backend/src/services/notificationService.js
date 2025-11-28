@@ -12,7 +12,7 @@ export const notifyUser = async (userId, payload) => {
 export const notifyUsers = async (roles, payload) => {
   const roleList = Array.isArray(roles) ? roles : [roles];
   const result = await query(
-    `SELECT id FROM users WHERE role = ANY($1::text[]) AND ativo = true`,
+    'SELECT id FROM users WHERE role = ANY($1::text[]) AND ativo = true',
     [roleList]
   );
 

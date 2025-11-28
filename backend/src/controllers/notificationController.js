@@ -15,7 +15,7 @@ export const listNotifications = async (req, res) => {
     );
 
     const unreadCount = await query(
-      `SELECT COUNT(*) AS total FROM notifications WHERE user_id = $1 AND read_at IS NULL`,
+      'SELECT COUNT(*) AS total FROM notifications WHERE user_id = $1 AND read_at IS NULL',
       [req.user.id]
     );
 

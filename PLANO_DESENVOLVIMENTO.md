@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 67% concluído (57/85 funcionalidades)
+## 📊 Status do Projeto: 78% concluído (66/85 funcionalidades)
 
 ---
 
@@ -48,13 +48,13 @@
 - [x] Validação de CNPJ/IE
 - [x] Status do cliente (ativo/inativo/bloqueado)
 
-## 5. Sistema de Pedidos (13/15 - 87%)
+## 5. Sistema de Pedidos (15/15 - 100% ✅)
 - [x] Modelo de dados: pedidos, itens_pedido
 - [x] API de criação de pedido
 - [x] Carrinho de compras (frontend)
 - [x] Validação de limite de crédito ao fazer pedido
 - [x] Cálculo de totais e impostos
-- [ ] Aplicação de condições de pagamento
+- [x] Aplicação de condições de pagamento
 - [x] Interface de pedidos para lojas
 - [x] Funcionalidade "Repetir pedido anterior"
 - [x] Acompanhamento de status do pedido
@@ -62,7 +62,7 @@
 - [x] Cancelamento de pedidos
 - [x] Aprovação de pedidos (workflow)
 - [x] Exportação de pedidos para Excel
-- [ ] Notificações de status (email/sistema)
+- [x] Notificações de status (email/sistema)
 - [x] Dashboard de pedidos em aberto
 
 ## 6. Integração Winthor (2/8 - 25%)
@@ -75,16 +75,16 @@
 - [ ] Logs de sincronização
 - [ ] Resolução de conflitos de dados
 
-## 7. Relatórios & Analytics (2/9 - 22%)
-- [ ] Curva ABC de produtos
-- [ ] Curva ABC de clientes
+## 7. Relatórios & Analytics (6/9 - 67% ✅)
+- [x] Curva ABC de produtos
+- [x] Curva ABC de clientes
 - [ ] Relatório de vendas por loja
 - [x] Relatório de vendas por período
-- [ ] Dashboard administrativo com KPIs
+- [x] Dashboard administrativo com KPIs
 - [x] Exportação de relatórios (PDF/Excel)
 - [ ] Gráficos de tendências
 - [ ] Análise de pedidos cancelados
-- [ ] Relatório de limites utilizados
+- [x] Relatório de limites utilizados
 
 ## 8. UX & Mobile (3/6 - 50%)
 - [x] Design responsivo completo (mobile-first)
@@ -94,10 +94,10 @@
 - [ ] Modo offline básico
 - [ ] Testes de usabilidade
 
-## 9. Segurança & Compliance (2/7 - 29%)
-- [ ] Auditoria de ações (logs de sistema)
+## 9. Segurança & Compliance (5/7 - 71% ✅)
+- [x] Auditoria de ações (logs de sistema)
 - [x] Política de senhas fortes
-- [ ] Rate limiting nas APIs
+- [x] Rate limiting nas APIs
 - [ ] Proteção contra SQL injection
 - [x] Proteção CSRF
 - [ ] HTTPS obrigatório em produção
@@ -120,14 +120,14 @@
 | Autenticação & Autorização | 8/8 (100%) | ✅ Completo |
 | Gestão de Produtos | 12/12 (100%) | ✅ Completo |
 | Gestão de Clientes | 10/10 (100%) | ✅ Completo |
-| Sistema de Pedidos | 13/15 (87%) | 🟡 Em andamento |
+| Sistema de Pedidos | 15/15 (100%) | ✅ Completo |
 | Integração Winthor | 2/8 (25%) | 🟡 Em andamento |
-| Relatórios & Analytics | 2/9 (22%) | 🟡 Em andamento |
+| Relatórios & Analytics | 6/9 (67%) | 🟡 Em andamento |
 | UX & Mobile | 3/6 (50%) | 🟡 Em andamento |
-| Segurança & Compliance | 2/7 (29%) | 🟡 Em andamento |
+| Segurança & Compliance | 5/7 (71%) | 🟡 Em andamento |
 | DevOps & Qualidade | 2/5 (40%) | 🟡 Em andamento |
 
-**Total Geral: 58/85 funcionalidades (68%)**
+**Total Geral: 66/85 funcionalidades (78%)**
 
 ---
 

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { createOrder, exportOrdersCsv, listOrders, openOrdersSummary, repeatOrder, updateOrderStatus } from '../controllers/orderController.js';
 import { eventBus } from '../events/eventBus.js';
+import { orderCreationLimiter, exportLimiter } from '../middleware/rateLimiter.js';
+import { auditMiddleware } from '../middleware/audit.js';
 
 const router = Router();
 
@@ -9,7 +11,7 @@ router.use(authenticateToken);
 
 router.get('/', listOrders);
 router.get('/open-summary', requireRole('operador', 'admin'), openOrdersSummary);
-router.get('/export/csv', requireRole('operador', 'admin'), exportOrdersCsv);
+router.get('/export/csv', requireRole('operador', 'admin'), exportLimiter, exportOrdersCsv);
 router.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -37,8 +39,8 @@ router.get('/stream', (req, res) => {
     res.end();
   });
 });
-router.post('/', requireRole('loja'), createOrder);
-router.post('/:id/repeat', requireRole('loja'), repeatOrder);
-router.patch('/:id/status', requireRole('operador', 'admin'), updateOrderStatus);
+router.post('/', requireRole('loja'), orderCreationLimiter, auditMiddleware('create', 'order'), createOrder);
+router.post('/:id/repeat', requireRole('loja'), orderCreationLimiter, auditMiddleware('create', 'order'), repeatOrder);
+router.patch('/:id/status', requireRole('operador', 'admin'), auditMiddleware('update', 'order'), updateOrderStatus);
 
 export default router;

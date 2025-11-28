@@ -1,16 +1,10 @@
 import { getClient, query } from '../config/database.js';
 import { eventBus } from '../events/eventBus.js';
-import { notifyUsers, notifyUser } from '../services/notificationService.js';
-
-const allowedPaymentTerms = [
-  '30 dias',
-  '45 dias',
-  '60 dias',
-  '90 dias',
-  '30/60',
-  '30/60/90',
-  'Antecipado'
-];
+import {
+  allowedPaymentTerms,
+  getPaymentTerms,
+  calculateOrderTotals
+} from '../services/paymentService.js';
 
 const validateItems = (items) => {
   if (!Array.isArray(items) || items.length === 0) {
@@ -80,32 +74,36 @@ export const createOrder = async (req, res) => {
       }
     }
 
-    let total = 0;
+    let subtotalValue = 0;
     for (const item of items) {
       const product = productsMap.get(item.productId);
       const subtotal = Number(product.preco) * Number(item.quantidade);
-      total += subtotal;
+      subtotalValue += subtotal;
     }
 
+    // Aplicar condições de pagamento e calcular descontos
+    const finalPaymentTerms = getPaymentTerms(paymentTerms, lojaPerfil.payment_terms);
+    
+    if (!allowedPaymentTerms.includes(finalPaymentTerms)) {
+      return fail(400, 'Condição de pagamento inválida');
+    }
+
+    const orderTotals = calculateOrderTotals(subtotalValue, finalPaymentTerms);
+
+    // Validar limite de crédito com valor final (após desconto)
     if (lojaPerfil.credit_limit !== null) {
       const atual = Number(lojaPerfil.credit_used || 0);
       const limite = Number(lojaPerfil.credit_limit);
-      if (atual + total > limite) {
+      if (atual + orderTotals.total > limite) {
         return fail(400, 'Limite de crédito excedido para a loja');
       }
     }
 
-    if (paymentTerms && !allowedPaymentTerms.includes(paymentTerms)) {
-      return fail(400, 'Condição de pagamento inválida');
-    }
-
-    const paymentTermsToPersist = paymentTerms || lojaPerfil.payment_terms || null;
-
     const orderResult = await client.query(
-      `INSERT INTO orders (loja_id, payment_terms, observations, total)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, status, payment_terms, observations, total, created_at, updated_at`,
-      [req.user.id, paymentTermsToPersist, observations, total]
+      `INSERT INTO orders (loja_id, payment_terms, observations, subtotal, discount, discount_percentage, total)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, status, payment_terms, observations, subtotal, discount, discount_percentage, total, created_at, updated_at`,
+      [req.user.id, finalPaymentTerms, observations, orderTotals.subtotal, orderTotals.discount, orderTotals.discountPercentage, orderTotals.total]
     );
 
     const order = orderResult.rows[0];
@@ -131,7 +129,7 @@ export const createOrder = async (req, res) => {
           SET credit_used = COALESCE(credit_used, 0) + $1,
               updated_at = NOW()
         WHERE id = $2`,
-      [total, req.user.id]
+      [orderTotals.total, req.user.id]
     );
 
     await client.query('COMMIT');
@@ -160,12 +158,6 @@ export const createOrder = async (req, res) => {
       type: 'order.created',
       lojaId: req.user.id,
       payload: response
-    });
-
-    await notifyUsers(['operador', 'admin'], {
-      type: 'order.created',
-      title: `Novo pedido #${order.id}`,
-      body: `Pedido registrado pela loja ${lojaPerfil.nome} no valor de R$ ${total.toFixed(2)}`
     });
 
     res.status(201).json({ order: response });
@@ -317,12 +309,6 @@ export const updateOrderStatus = async (req, res) => {
       type: 'order.status_updated',
       lojaId: order.loja_id,
       payload: response
-    });
-
-    await notifyUser(order.loja_id, {
-      type: 'order.status_updated',
-      title: `Pedido #${order.id} atualizado`,
-      body: `Status agora é ${status}`
     });
 
     res.json({ order: response });

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/database.js';
+import { logAudit } from '../services/auditService.js';
 
 export const login = async (req, res) => {
   try {
@@ -38,6 +39,18 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    // Auditoria de login bem-sucedido
+    await logAudit({
+      userId: user.id,
+      userEmail: user.email,
+      userRole: user.role,
+      action: 'login',
+      resourceType: 'auth',
+      description: 'Login realizado com sucesso',
+      ipAddress: req.ip || req.connection?.remoteAddress,
+      userAgent: req.get('user-agent')
+    });
 
     res.json({
       token,

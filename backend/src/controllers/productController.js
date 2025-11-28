@@ -1,6 +1,45 @@
 import { query } from '../config/database.js';
 
 const requiredFields = ['codigo', 'descricao', 'preco', 'unidade', 'tributacao'];
+const baseCsvFields = ['codigo', 'descricao', 'preco', 'unidade', 'tributacao', 'estoque', 'categoria'];
+const winthorTemplateFields = [
+  'aceitavendafracao', 'aliquotacif', 'altura', 'alturapal', 'alturatotal', 'anvisa', 'apto',
+  'cestabasicalegis', 'checarmultiplovendabnf', 'classecomissao', 'classeestoque', 'classificfiscal',
+  'codacondicionamento', 'codadwords', 'codagregacao', 'codagrupmapasep', 'codauxiliar', 'codauxiliar2',
+  'codauxiliartrib', 'codcamplomadee', 'codcategoria', 'codcor', 'coddistrb', 'codepto', 'codfab',
+  'codformatopapel', 'codfornec', 'codfunccadastro', 'codfuncultaltcad', 'codfuncultalter', 'codgrade',
+  'codgrulit', 'codinterno', 'codlinhaprazo', 'codlinhaprod', 'codmarca', 'codmotisencaoanvisa',
+  'codncmex', 'codonu', 'codprazoent', 'codprincipativo', 'codprincipativo2', 'codprod', 'codprodembalagem',
+  'codprodfornec', 'codprodmaster', 'codprodprinc', 'codprodsintegra', 'codrisco', 'codsalmed',
+  'codsazonalidademed', 'codsec', 'codsubcategoria', 'codsubmarca', 'codtablit', 'codunidmedidanf',
+  'colunagrade', 'concentracao', 'conciliaimportacao', 'conferencocheckout', 'controladoibama',
+  'controlapatrimonio', 'controlavalidadedolote', 'custorep', 'custoreptab', 'dadostecnicos', 'descpapel',
+  'descricao', 'descricao1', 'descricao2', 'descricao3', 'descricao4', 'descricao5', 'descricao6', 'descricao7',
+  'destaquefichatecnica', 'diametroexterno', 'diametrointerno', 'diretoriofotos', 'dirfotoprod', 'dtcadastro',
+  'dtdolar', 'dtexclusao', 'dtinicontlote', 'dtultaltcad', 'dtultaltcom', 'dtultalter', 'dv', 'embalagem',
+  'embalagemmaster', 'embvendaecommerceunilever', 'enviaecommerce', 'enviainftecnicanfe', 'estoqueporlote',
+  'exibesemestoqueecommerce', 'extipi', 'farmaciapopular', 'fatorconversaobionexo', 'fatorconversaokg',
+  'fatorconvtrib', 'fatorconvtribex', 'fldselecao', 'formaesterilizacao', 'fornecedor', 'freteespecial',
+  'gramatura', 'gtincodauxiliar', 'gtincodauxiliar2', 'gtincodauxiliartrib', 'idembalagem', 'importado',
+  'imunetrib', 'induzlote', 'informacoestecnicas', 'lastropal', 'letrapagina', 'linkid', 'litragem',
+  'margemmin', 'modulo', 'moeda', 'multiplo', 'multiplocompras', 'myfrota', 'naturezaproduto', 'nbm',
+  'nomeecommerce', 'numdiasvalidademin', 'numero', 'numlote', 'numoriginal', 'numpag', 'ob scontxcampo', 'obs',
+  'obs2', 'obscontxttexto', 'obsfiscoxcampo', 'obsfiscoxtexto', 'paisorigem', 'pcomext1', 'pcomint1', 'pcomrep1',
+  'percaliqext', 'percalqint', 'percbon', 'percdespadicional', 'percdiferencakgfrio', 'percebonificvenda',
+  'percfrete', 'percfretefob', 'percicmred', 'percipi', 'perciva', 'percofins', 'percoutrasdesp', 'percperdakg',
+  'percsuframa', 'percvenda', 'pericm', 'pericmsantecipado', 'perpis', 'pesobruto', 'pesobrutofrete',
+  'pesobrutomaster', 'pesoembalagem', 'pesoliq', 'pesoliqdi', 'pesomaximo', 'pesominimo', 'pesopesa',
+  'pesovariavel', 'pmpfmedicamento', 'prazomaxvalidade', 'prazominvalidade', 'prazoval', 'precicestrangeira',
+  'precofabrica', 'precofixo', 'precomaxconsum', 'precomaxconsumtab', 'prefixolote', 'proxnumlote', 'psicotropico',
+  'qtdeMaxSeparPedido', 'qtmetros', 'qtminsugcompra', 'qttotpal', 'qtunit', 'qtunitcx', 'registromsmed',
+  'registropeca', 'retinoico', 'revenda', 'rid', 'rua', 'seqpagina', 'seqtabpreco', 'simpro', 'status',
+  'subtituloecommerce', 'sugvenda', 'tamanhopeca', 'taraporpeca', 'tipoalturapalete', 'tipocomissao',
+  'tipocustotransf', 'tipodescarga', 'tipoembarqueimp', 'tipointegracaob2b', 'tipomedicamento', 'tipomerc', 'tipoprod',
+  'tipostoque', 'tipotributmedic', 'tipovolumedescarga', 'tituloecommerce', 'unidade', 'unidademaster',
+  'unidadepadrao', 'unidadetrib', 'unidadetribex', 'usaclassificacao', 'usacodagregacao', 'usaecommerceunilever',
+  'usalicencaimportacao', 'usawms', 'usoprolongadosngpc', 'utilizaintegracaokibon', 'valortaraporpeca', 'vlbonific',
+  'vlmaodeobra', 'volume'
+];
 
 const validateProductPayload = (body) => {
   const missing = requiredFields.filter(field => !body[field]);
@@ -177,8 +216,6 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
-const baseCsvFields = ['codigo', 'descricao', 'preco', 'unidade', 'tributacao', 'estoque', 'categoria'];
-
 const toCsvValue = (value) => {
   if (value === null || value === undefined) return '';
   const str = String(value).replace(/"/g, '""');
@@ -186,6 +223,38 @@ const toCsvValue = (value) => {
     return `"${str}"`;
   }
   return str;
+};
+
+const parseNumber = (value, defaultValue = 0) => {
+  if (value === null || value === undefined || value === '') return defaultValue;
+  const normalized = String(value).replace(/\./g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
+};
+
+const parseCsvLine = (line) => {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ';' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
 };
 
 export const exportProductsCsv = async (req, res) => {

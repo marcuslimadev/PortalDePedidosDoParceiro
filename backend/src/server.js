@@ -9,16 +9,23 @@ import productsRouter from './routes/products.js';
 import ordersRouter from './routes/orders.js';
 import catalogRouter from './routes/catalog.js';
 import clientsRouter from './routes/clients.js';
+import auditRouter from './routes/audit.js';
+import reportsRouter from './routes/reports.js';
 import { runMigrations } from './migrations/run.js';
 import { runSeed } from './scripts/seedMockData.js';
 import { query } from './config/database.js';
 import notificationsRouter from './routes/notifications.js';
+import { registerEventListeners } from './services/eventListeners.js';
+import { generalLimiter } from './middleware/rateLimiter.js';
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Rate limiting geral para todas as rotas da API
+app.use('/api', generalLimiter);
 
 async function ensureDefaultAdminUser () {
   const email = 'admin@portalpedidos.com';
@@ -81,6 +88,8 @@ app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/clients', clientsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/audit', auditRouter);
+app.use('/api/reports', reportsRouter);
 
 const port = process.env.PORT || 3000;
 
@@ -91,6 +100,10 @@ async function startServer () {
     // Sincroniza dados base sempre (idempotente: upsert de admin, operadores, clientes e catálogo mock)
     await runSeed();
     await ensureDefaultAdminUser();
+    
+    // Registrar listeners de eventos
+    registerEventListeners();
+    
     const existingProducts = await query('SELECT COUNT(*) AS total FROM products');
     const existingClients = await query("SELECT COUNT(*) AS total FROM users WHERE role = 'loja'");
     const productsCount = Number(existingProducts.rows[0]?.total || 0);
