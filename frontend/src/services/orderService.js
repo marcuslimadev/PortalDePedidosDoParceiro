@@ -1,14 +1,42 @@
 import api from './api';
+import offlineSync from './offlineSync';
 
 export const orderService = {
   async list(params = {}) {
-    const response = await api.get('/orders', { params });
-    return response.data;
+    try {
+      const response = await api.get('/orders', { params });
+      return response.data;
+    } catch (error) {
+      // If offline, return empty array or cached data
+      if (!navigator.onLine) {
+        console.warn('Offline - não foi possível buscar pedidos');
+        return { orders: [], total: 0 };
+      }
+      throw error;
+    }
   },
 
   async create(payload) {
-    const response = await api.post('/orders', payload);
-    return response.data.order;
+    try {
+      const response = await api.post('/orders', payload);
+      return response.data.order;
+    } catch (error) {
+      // If offline, save to pending queue
+      if (!navigator.onLine) {
+        const token = localStorage.getItem('token');
+        await offlineSync.savePendingOrder(payload, token);
+        
+        // Return mock order for UI feedback
+        return {
+          ...payload,
+          id: 'pending-' + Date.now(),
+          status: 'pending_sync',
+          created_at: new Date().toISOString(),
+          offline: true
+        };
+      }
+      throw error;
+    }
   },
 
   async updateStatus(orderId, status) {
@@ -30,7 +58,16 @@ export const orderService = {
   },
 
   async openSummary () {
-    const response = await api.get('/orders/open-summary');
-    return response.data;
+    try {
+      const response = await api.get('/orders/open-summary');
+      return response.data;
+    } catch (error) {
+      if (!navigator.onLine) {
+        console.warn('Offline - não foi possível buscar resumo');
+        return { open_orders: 0, total_value: 0 };
+      }
+      throw error;
+    }
   }
 };
+

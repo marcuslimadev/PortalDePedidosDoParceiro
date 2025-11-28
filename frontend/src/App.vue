@@ -1,7 +1,17 @@
 <template>
-  <router-view />
+  <div>
+    <OfflineIndicator />
+    <router-view />
+  </div>
 </template>
 
-<script setup>
-// Main App component with router
+<script>
+import OfflineIndicator from './components/OfflineIndicator.vue';
+
+export default {
+  name: 'App',
+  components: {
+    OfflineIndicator
+  }
+};
 </script>

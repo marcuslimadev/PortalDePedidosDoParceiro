@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 82% concluído (70/85 funcionalidades)
+## 📊 Status do Projeto: 85% concluído (72/85 funcionalidades)
 
 ---
 
@@ -86,12 +86,12 @@
 - [ ] Análise de pedidos cancelados
 - [x] Relatório de limites utilizados
 
-## 8. UX & Mobile (3/6 - 50%)
+## 8. UX & Mobile (5/6 - 83% ✅)
 - [x] Design responsivo completo (mobile-first)
 - [x] Menu de navegação adaptativo
 - [x] Otimização de performance
-- [ ] PWA (Progressive Web App)
-- [ ] Modo offline básico
+- [x] PWA (Progressive Web App)
+- [x] Modo offline básico
 - [ ] Testes de usabilidade
 
 ## 9. Segurança & Compliance (6/7 - 86% ✅)
