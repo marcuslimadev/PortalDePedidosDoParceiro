@@ -10,6 +10,7 @@ import ordersRouter from './routes/orders.js';
 import catalogRouter from './routes/catalog.js';
 import clientsRouter from './routes/clients.js';
 import auditRouter from './routes/audit.js';
+import winthorRouter from './routes/winthor.js';
 import reportsRouter from './routes/reports.js';
 import { runMigrations } from './migrations/run.js';
 import { runSeed } from './scripts/seedMockData.js';
@@ -17,6 +18,7 @@ import { query } from './config/database.js';
 import notificationsRouter from './routes/notifications.js';
 import { registerEventListeners } from './services/eventListeners.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
+import { securityHeaders, enforceHttps } from './middleware/security.js';
 
 dotenv.config();
 
@@ -26,6 +28,11 @@ app.use(express.json());
 
 // Rate limiting geral para todas as rotas da API
 app.use('/api', generalLimiter);
+
+// Segurança HTTP
+app.enable('trust proxy');
+app.use(enforceHttps);
+app.use(securityHeaders);
 
 async function ensureDefaultAdminUser () {
   const email = 'admin@portalpedidos.com';
@@ -89,6 +96,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/clients', clientsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/audit', auditRouter);
+app.use('/api/winthor', winthorRouter);
 app.use('/api/reports', reportsRouter);
 
 const port = process.env.PORT || 3000;

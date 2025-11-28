@@ -285,3 +285,32 @@ router.get('/dashboard', async (req, res) => {
 });
 
 export default router;
+// Vendas por loja
+router.get('/sales-by-store', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const result = await query(
+      `SELECT 
+         u.id as loja_id,
+         u.nome as loja_nome,
+         COUNT(o.id) as order_count,
+         COALESCE(SUM(o.total), 0) as total_value,
+         COALESCE(SUM(o.discount), 0) as total_discount
+       FROM users u
+       LEFT JOIN orders o ON o.loja_id = u.id
+         AND o.status != 'cancelado'
+         AND o.created_at >= $1
+         AND o.created_at < $2 + INTERVAL '1 day'
+       WHERE u.role = 'loja' AND u.ativo = true
+       GROUP BY u.id, u.nome
+       ORDER BY total_value DESC`,
+      [startDate, endDate]
+    );
+
+    res.json({ stores: result.rows, startDate, endDate });
+  } catch (error) {
+    console.error('Erro ao gerar relatório de vendas por loja:', error);
+    res.status(500).json({ error: 'Erro ao gerar relatório' });
+  }
+});

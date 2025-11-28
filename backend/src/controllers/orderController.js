@@ -83,7 +83,7 @@ export const createOrder = async (req, res) => {
 
     // Aplicar condições de pagamento e calcular descontos
     const finalPaymentTerms = getPaymentTerms(paymentTerms, lojaPerfil.payment_terms);
-    
+
     if (!allowedPaymentTerms.includes(finalPaymentTerms)) {
       return fail(400, 'Condição de pagamento inválida');
     }

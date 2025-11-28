@@ -2,7 +2,7 @@ import { query } from '../config/database.js';
 
 const requiredFields = ['codigo', 'descricao', 'preco', 'unidade', 'tributacao'];
 const baseCsvFields = ['codigo', 'descricao', 'preco', 'unidade', 'tributacao', 'estoque', 'categoria'];
-const winthorTemplateFields = [
+// const winthorTemplateFields = [
   'aceitavendafracao', 'aliquotacif', 'altura', 'alturapal', 'alturatotal', 'anvisa', 'apto',
   'cestabasicalegis', 'checarmultiplovendabnf', 'classecomissao', 'classeestoque', 'classificfiscal',
   'codacondicionamento', 'codadwords', 'codagregacao', 'codagrupmapasep', 'codauxiliar', 'codauxiliar2',
@@ -225,14 +225,14 @@ const toCsvValue = (value) => {
   return str;
 };
 
-const parseNumber = (value, defaultValue = 0) => {
+// const parseNumber = (value, defaultValue = 0) => {
   if (value === null || value === undefined || value === '') return defaultValue;
   const normalized = String(value).replace(/\./g, '').replace(',', '.');
   const parsed = Number(normalized);
   return Number.isNaN(parsed) ? defaultValue : parsed;
 };
 
-const parseCsvLine = (line) => {
+// const parseCsvLine = (line) => {
   const result = [];
   let current = '';
   let inQuotes = false;
