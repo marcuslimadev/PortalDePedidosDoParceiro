@@ -42,11 +42,13 @@ app.use(sentryTracingHandler());
 app.use(cors());
 app.use(express.json());
 
+// Segurança HTTP - trust proxy ANTES do rate limiter
+if (process.env.NODE_ENV === 'production') {
+  app.enable('trust proxy');
+}
+
 // Rate limiting geral para todas as rotas da API
 app.use('/api', generalLimiter);
-
-// Segurança HTTP
-app.enable('trust proxy');
 app.use(enforceHttps);
 app.use(securityHeaders);
 
