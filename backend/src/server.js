@@ -42,14 +42,14 @@ app.use(sentryTracingHandler());
 app.use(cors());
 app.use(express.json());
 
-// Segurança HTTP - trust proxy ANTES do rate limiter
-if (process.env.NODE_ENV === 'production') {
-  app.enable('trust proxy');
-}
-
 // Rate limiting geral para todas as rotas da API
 app.use('/api', generalLimiter);
-app.use(enforceHttps);
+
+// Segurança HTTP (trust proxy desabilitado para compatibilidade com rate limiter v8+)
+// app.enable('trust proxy'); // REMOVIDO: causa erro ERR_ERL_PERMISSIVE_TRUST_PROXY
+if (process.env.NODE_ENV === 'production') {
+  app.use(enforceHttps);
+}
 app.use(securityHeaders);
 
 async function ensureDefaultAdminUser () {
@@ -154,7 +154,7 @@ async function startServer () {
     await ensureDefaultAdminUser();
 
     // Registrar listeners de eventos
-    registerEventListeners();
+    // registerEventListeners(); // TEMPORARIAMENTE DESABILITADO PARA DEBUG
 
     const existingProducts = await query('SELECT COUNT(*) AS total FROM products');
     const existingClients = await query("SELECT COUNT(*) AS total FROM users WHERE role = 'loja'");
@@ -162,20 +162,10 @@ async function startServer () {
     const clientsCount = Number(existingClients.rows[0]?.total || 0);
     console.log(`Seed sincronizado. Produtos: ${productsCount}, clientes: ${clientsCount}`);
 
-    // Start listening DENTRO do try para garantir que rode
-    const server = app.listen(port, '0.0.0.0', () => {
+    // Start server DENTRO do try
+    app.listen(port, '0.0.0.0', () => {
       console.log(`✅ API rodando na porta ${port}`);
-      console.log(`🌐 http://localhost:${port}/api`);
-    });
-
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE') {
-        console.error(`❌ Porta ${port} já está em uso. Tente outra porta.`);
-        process.exit(1);
-      } else {
-        console.error('❌ Erro ao iniciar servidor:', error);
-        process.exit(1);
-      }
+      console.log(`🌐 Acesse: http://localhost:${port}/api`);
     });
 
   } catch (error) {
