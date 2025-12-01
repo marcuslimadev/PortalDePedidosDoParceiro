@@ -104,6 +104,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'Portal de Pedidos API online' });
 });
 
+// Rota base para /api evitando "Cannot GET /api" em ambientes que testam raiz da API
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Portal de Pedidos API',
+    status: 'ok',
+    version: process.env.RENDER_GIT_COMMIT || 'dev',
+    time: new Date().toISOString()
+  });
+});
+
 app.use('/api', healthRouter);
 app.use('/api/catalog', catalogRouter);
 app.use('/api/auth', authRouter);

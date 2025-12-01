@@ -31,7 +31,7 @@ export const loginLimiter = rateLimit({
 
 /**
  * Rate limiter para criação de pedidos
- * 20 pedidos por hora por usuário
+ * 20 pedidos por hora por IP
  */
 export const orderCreationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
@@ -40,11 +40,7 @@ export const orderCreationLimiter = rateLimit({
     error: 'Limite de criação de pedidos atingido. Tente novamente em 1 hora'
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Usa o ID do usuário como chave ao invés do IP
-    return req.user?.id?.toString() || req.ip;
-  }
+  legacyHeaders: false
 });
 
 /**
@@ -63,7 +59,7 @@ export const registrationLimiter = rateLimit({
 
 /**
  * Rate limiter para exportação de dados
- * 10 exportações por hora por usuário
+ * 10 exportações por hora por IP
  */
 export const exportLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
@@ -72,15 +68,12 @@ export const exportLimiter = rateLimit({
     error: 'Limite de exportações atingido. Tente novamente em 1 hora'
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.user?.id?.toString() || req.ip;
-  }
+  legacyHeaders: false
 });
 
 /**
  * Rate limiter para operações de admin
- * 100 requisições por 15 minutos
+ * 100 requisições por 15 minutos por IP
  */
 export const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -89,8 +82,5 @@ export const adminLimiter = rateLimit({
     error: 'Limite de requisições atingido'
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.user?.id?.toString() || req.ip;
-  }
+  legacyHeaders: false
 });

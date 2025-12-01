@@ -1,15 +1,17 @@
 import * as Sentry from '@sentry/node';
-import { ProfilingIntegration } from '@sentry/profiling-node';
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
  */
+let SENTRY_ENABLED = false;
+
 export function initSentry (app) {
   const sentryDsn = process.env.SENTRY_DSN;
 
   // Only initialize in production or if DSN is provided
   if (!sentryDsn) {
     console.log('Sentry DSN not configured - error tracking disabled');
+    SENTRY_ENABLED = false;
     return;
   }
 
@@ -28,8 +30,6 @@ export function initSentry (app) {
       // Express integration
       new Sentry.Integrations.Express({ app }),
 
-      // Profiling integration
-      new ProfilingIntegration()
     ],
 
     // Ignore common errors
@@ -47,6 +47,7 @@ export function initSentry (app) {
     serverName: process.env.RENDER_SERVICE_NAME || 'local-dev'
   });
 
+  SENTRY_ENABLED = true;
   console.log(`Sentry initialized for environment: ${process.env.NODE_ENV}`);
 }
 
@@ -54,6 +55,7 @@ export function initSentry (app) {
  * Express error handler middleware that sends to Sentry
  */
 export function sentryErrorHandler () {
+  if (!SENTRY_ENABLED) return (err, req, res, next) => next(err);
   return Sentry.Handlers.errorHandler({
     shouldHandleError (error) {
       // Send all errors to Sentry except 4xx errors
@@ -69,6 +71,7 @@ export function sentryErrorHandler () {
  * Request handler middleware for Sentry tracing
  */
 export function sentryRequestHandler () {
+  if (!SENTRY_ENABLED) return (req, res, next) => next();
   return Sentry.Handlers.requestHandler({
     user: ['id', 'email', 'role'],
     ip: true
@@ -79,6 +82,7 @@ export function sentryRequestHandler () {
  * Tracing handler middleware for Sentry
  */
 export function sentryTracingHandler () {
+  if (!SENTRY_ENABLED) return (req, res, next) => next();
   return Sentry.Handlers.tracingHandler();
 }
 
