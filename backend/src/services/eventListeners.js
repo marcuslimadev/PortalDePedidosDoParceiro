@@ -8,13 +8,13 @@ import { query } from '../config/database.js';
  */
 const getUserEmails = async (userIds) => {
   if (!Array.isArray(userIds) || userIds.length === 0) return [];
-  
+
   const placeholders = userIds.map((_, i) => `$${i + 1}`).join(',');
   const result = await query(
     `SELECT email FROM users WHERE id IN (${placeholders}) AND ativo = true`,
     userIds
   );
-  
+
   return result.rows.map(row => row.email);
 };
 
@@ -24,10 +24,10 @@ const getUserEmails = async (userIds) => {
 const getUserEmailsByRoles = async (roles) => {
   const roleList = Array.isArray(roles) ? roles : [roles];
   const result = await query(
-    `SELECT email FROM users WHERE role = ANY($1::text[]) AND ativo = true`,
+    'SELECT email FROM users WHERE role = ANY($1::text[]) AND ativo = true',
     [roleList]
   );
-  
+
   return result.rows.map(row => row.email);
 };
 
@@ -79,7 +79,7 @@ const handleOrderStatusUpdated = async ({ lojaId, payload }) => {
     const lojaEmails = await getUserEmails([lojaId]);
     if (lojaEmails.length > 0) {
       let template;
-      
+
       if (status === 'aprovado') {
         template = emailTemplates.pedidoAprovado(order, lojaNome);
       } else if (status === 'cancelado') {
@@ -87,7 +87,7 @@ const handleOrderStatusUpdated = async ({ lojaId, payload }) => {
       } else {
         template = emailTemplates.statusAtualizado(order, lojaNome, status);
       }
-      
+
       await sendEmail(lojaEmails, template.subject, template.html);
     }
 
@@ -121,13 +121,13 @@ const handleOrderCancelled = async ({ lojaId, payload, motivo }) => {
     // Emails
     const lojaEmails = await getUserEmails([lojaId]);
     const adminEmails = await getUserEmailsByRoles(['admin', 'operador']);
-    
+
     const template = emailTemplates.pedidoCancelado(order, lojaNome, motivo);
-    
+
     if (lojaEmails.length > 0) {
       await sendEmail(lojaEmails, template.subject, template.html);
     }
-    
+
     if (adminEmails.length > 0) {
       await sendEmail(adminEmails, `[Admin] ${template.subject}`, template.html);
     }
@@ -149,15 +149,15 @@ export const registerEventListeners = () => {
       case 'order.created':
         await handleOrderCreated({ lojaId, payload });
         break;
-      
+
       case 'order.status_updated':
         await handleOrderStatusUpdated({ lojaId, payload });
         break;
-      
+
       case 'order.cancelled':
         await handleOrderCancelled({ lojaId, payload, motivo });
         break;
-      
+
       default:
         console.log('Evento desconhecido: ' + type);
     }

@@ -24,11 +24,11 @@ router.get('/', async (req, res) => {
     };
 
     const logs = await getAuditLogs(filters);
-    
-    res.json({ 
-      logs, 
+
+    res.json({
+      logs,
       total: logs.length,
-      filters 
+      filters
     });
   } catch (error) {
     console.error('Erro ao buscar logs de auditoria:', error);

@@ -19,7 +19,7 @@ describe('Authentication API', () => {
       // Create test user with known password
       const bcrypt = await import('bcryptjs');
       const passwordHash = await bcrypt.hash('password123', 10);
-      
+
       await createTestUser({
         email: 'user@test.com',
         password_hash: passwordHash,
@@ -44,7 +44,7 @@ describe('Authentication API', () => {
     it('should reject invalid credentials', async () => {
       const bcrypt = await import('bcryptjs');
       const passwordHash = await bcrypt.hash('password123', 10);
-      
+
       await createTestUser({
         email: 'user@test.com',
         password_hash: passwordHash
@@ -146,7 +146,7 @@ describe('Authentication API', () => {
     it('should generate valid JWT token', async () => {
       const bcrypt = await import('bcryptjs');
       const passwordHash = await bcrypt.hash('password123', 10);
-      
+
       await createTestUser({
         email: 'user@test.com',
         password_hash: passwordHash
@@ -173,7 +173,7 @@ describe('Authentication API', () => {
     it('should include user data in token payload', async () => {
       const bcrypt = await import('bcryptjs');
       const passwordHash = await bcrypt.hash('password123', 10);
-      
+
       const user = await createTestUser({
         email: 'user@test.com',
         password_hash: passwordHash,

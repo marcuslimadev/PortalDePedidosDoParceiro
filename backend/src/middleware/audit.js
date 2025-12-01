@@ -88,12 +88,12 @@ const sanitizeData = (data) => {
   if (!data) return null;
 
   const sanitized = { ...data };
-  
+
   // Remove campos sensíveis
   delete sanitized.password;
   delete sanitized.password_hash;
   delete sanitized.token;
-  
+
   return sanitized;
 };
 

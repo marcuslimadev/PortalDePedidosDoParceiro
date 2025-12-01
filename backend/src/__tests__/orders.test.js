@@ -17,7 +17,7 @@ describe('Orders API', () => {
 
   beforeEach(async () => {
     await cleanDatabase();
-    
+
     // Create users
     adminUser = await createTestUser({
       email: 'admin@test.com',
@@ -248,7 +248,7 @@ describe('Orders API', () => {
     it('should list orders for loja user (own orders only)', async () => {
       await createTestOrder({ loja_id: lojaUser.id });
       await createTestOrder({ loja_id: lojaUser.id });
-      
+
       // Create another loja and order
       const otherLoja = await createTestUser({
         email: 'other@test.com',
@@ -267,7 +267,7 @@ describe('Orders API', () => {
 
     it('should list all orders for admin', async () => {
       await createTestOrder({ loja_id: lojaUser.id });
-      
+
       const otherLoja = await createTestUser({
         email: 'other@test.com',
         role: 'loja'

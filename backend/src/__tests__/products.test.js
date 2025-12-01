@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import productRoutes from '../routes/products.js';
 import { cleanDatabase, createTestUser, createTestProduct, generateTestToken } from './testHelpers.js';
-import { authenticateToken, requireRole } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 // Create test app
 const app = express();
@@ -15,7 +15,7 @@ describe('Products API', () => {
 
   beforeEach(async () => {
     await cleanDatabase();
-    
+
     // Create admin user
     adminUser = await createTestUser({
       email: 'admin@test.com',

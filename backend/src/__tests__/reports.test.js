@@ -17,7 +17,7 @@ describe('Reports API', () => {
 
   beforeEach(async () => {
     await cleanDatabase();
-    
+
     // Create users
     adminUser = await createTestUser({
       email: 'admin@test.com',

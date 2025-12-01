@@ -4,9 +4,9 @@ import { ProfilingIntegration } from '@sentry/profiling-node';
 /**
  * Initialize Sentry for error tracking and performance monitoring
  */
-export function initSentry(app) {
+export function initSentry (app) {
   const sentryDsn = process.env.SENTRY_DSN;
-  
+
   // Only initialize in production or if DSN is provided
   if (!sentryDsn) {
     console.log('Sentry DSN not configured - error tracking disabled');
@@ -16,35 +16,35 @@ export function initSentry(app) {
   Sentry.init({
     dsn: sentryDsn,
     environment: process.env.NODE_ENV || 'development',
-    
+
     // Set sample rate for production
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    
+
     integrations: [
       // HTTP integration for Express
       new Sentry.Integrations.Http({ tracing: true }),
-      
+
       // Express integration
       new Sentry.Integrations.Express({ app }),
-      
+
       // Profiling integration
-      new ProfilingIntegration(),
+      new ProfilingIntegration()
     ],
-    
+
     // Ignore common errors
     ignoreErrors: [
       'ECONNREFUSED',
       'ECONNRESET',
       'EPIPE',
-      'ETIMEDOUT',
+      'ETIMEDOUT'
     ],
-    
+
     // Release tracking
     release: process.env.RENDER_GIT_COMMIT || 'development',
-    
+
     // Server name
-    serverName: process.env.RENDER_SERVICE_NAME || 'local-dev',
+    serverName: process.env.RENDER_SERVICE_NAME || 'local-dev'
   });
 
   console.log(`Sentry initialized for environment: ${process.env.NODE_ENV}`);
@@ -53,62 +53,62 @@ export function initSentry(app) {
 /**
  * Express error handler middleware that sends to Sentry
  */
-export function sentryErrorHandler() {
+export function sentryErrorHandler () {
   return Sentry.Handlers.errorHandler({
-    shouldHandleError(error) {
+    shouldHandleError (error) {
       // Send all errors to Sentry except 4xx errors
       if (error.status >= 400 && error.status < 500) {
         return false;
       }
       return true;
-    },
+    }
   });
 }
 
 /**
  * Request handler middleware for Sentry tracing
  */
-export function sentryRequestHandler() {
+export function sentryRequestHandler () {
   return Sentry.Handlers.requestHandler({
     user: ['id', 'email', 'role'],
-    ip: true,
+    ip: true
   });
 }
 
 /**
  * Tracing handler middleware for Sentry
  */
-export function sentryTracingHandler() {
+export function sentryTracingHandler () {
   return Sentry.Handlers.tracingHandler();
 }
 
 /**
  * Capture exception manually
  */
-export function captureException(error, context = {}) {
+export function captureException (error, context = {}) {
   Sentry.captureException(error, {
     contexts: {
-      custom: context,
-    },
+      custom: context
+    }
   });
 }
 
 /**
  * Capture message manually
  */
-export function captureMessage(message, level = 'info', context = {}) {
+export function captureMessage (message, level = 'info', context = {}) {
   Sentry.captureMessage(message, {
     level,
     contexts: {
-      custom: context,
-    },
+      custom: context
+    }
   });
 }
 
 /**
  * Set user context for Sentry
  */
-export function setUserContext(user) {
+export function setUserContext (user) {
   if (!user) {
     Sentry.setUser(null);
     return;
@@ -118,36 +118,36 @@ export function setUserContext(user) {
     id: user.id,
     email: user.email,
     username: user.nome,
-    role: user.role,
+    role: user.role
   });
 }
 
 /**
  * Add breadcrumb to Sentry
  */
-export function addBreadcrumb(message, category = 'custom', level = 'info', data = {}) {
+export function addBreadcrumb (message, category = 'custom', level = 'info', data = {}) {
   Sentry.addBreadcrumb({
     message,
     category,
     level,
-    data,
+    data
   });
 }
 
 /**
  * Start a new transaction for performance monitoring
  */
-export function startTransaction(name, op = 'http.server') {
+export function startTransaction (name, op = 'http.server') {
   return Sentry.startTransaction({
     name,
-    op,
+    op
   });
 }
 
 /**
  * Flush Sentry events (useful before shutdown)
  */
-export async function flushSentry(timeout = 2000) {
+export async function flushSentry (timeout = 2000) {
   try {
     await Sentry.close(timeout);
     console.log('Sentry events flushed successfully');

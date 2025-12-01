@@ -19,11 +19,11 @@ import notificationsRouter from './routes/notifications.js';
 import { registerEventListeners } from './services/eventListeners.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { securityHeaders, enforceHttps } from './middleware/security.js';
-import { 
-  initSentry, 
-  sentryRequestHandler, 
-  sentryTracingHandler, 
-  sentryErrorHandler 
+import {
+  initSentry,
+  sentryRequestHandler,
+  sentryTracingHandler,
+  sentryErrorHandler
 } from './config/sentry.js';
 
 dotenv.config();
@@ -121,10 +121,10 @@ app.use(sentryErrorHandler());
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  
+
   const status = err.status || 500;
   const message = err.message || 'Erro interno do servidor';
-  
+
   res.status(status).json({
     error: message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
@@ -140,10 +140,10 @@ async function startServer () {
     // Sincroniza dados base sempre (idempotente: upsert de admin, operadores, clientes e catálogo mock)
     await runSeed();
     await ensureDefaultAdminUser();
-    
+
     // Registrar listeners de eventos
     registerEventListeners();
-    
+
     const existingProducts = await query('SELECT COUNT(*) AS total FROM products');
     const existingClients = await query("SELECT COUNT(*) AS total FROM users WHERE role = 'loja'");
     const productsCount = Number(existingProducts.rows[0]?.total || 0);
@@ -159,4 +159,3 @@ async function startServer () {
 }
 
 startServer();
-

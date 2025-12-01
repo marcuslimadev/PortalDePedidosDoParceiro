@@ -16,8 +16,8 @@ router.get('/abc/products', async (req, res) => {
     const period = parseInt(req.query.period) || 90; // dias
     const type = req.query.type || 'value'; // 'value' ou 'quantity'
 
-    const orderByClause = type === 'quantity' 
-      ? 'SUM(oi.quantidade)' 
+    const orderByClause = type === 'quantity'
+      ? 'SUM(oi.quantidade)'
       : 'SUM(oi.subtotal)';
 
     const result = await query(
@@ -231,7 +231,7 @@ router.get('/dashboard', async (req, res) => {
         FROM orders
         WHERE created_at >= NOW() - INTERVAL '30 days'
       `),
-      
+
       // Estatísticas de receita
       query(`
         SELECT 
@@ -240,7 +240,7 @@ router.get('/dashboard', async (req, res) => {
           AVG(total) FILTER (WHERE status != 'cancelado') as avg_order_value
         FROM orders
       `),
-      
+
       // Top 5 produtos
       query(`
         SELECT 
@@ -256,7 +256,7 @@ router.get('/dashboard', async (req, res) => {
         ORDER BY value DESC
         LIMIT 5
       `),
-      
+
       // Top 5 clientes
       query(`
         SELECT 

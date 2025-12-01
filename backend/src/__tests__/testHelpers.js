@@ -7,12 +7,12 @@ import { getClient } from '../config/database.js';
 /**
  * Clean up database tables for testing
  */
-export async function cleanDatabase() {
+export async function cleanDatabase () {
   const client = await getClient();
-  
+
   try {
     await client.query('BEGIN');
-    
+
     // Delete in correct order to respect foreign keys
     await client.query('DELETE FROM order_items');
     await client.query('DELETE FROM orders');
@@ -23,7 +23,7 @@ export async function cleanDatabase() {
     await client.query('DELETE FROM product_price_history');
     await client.query('DELETE FROM products');
     await client.query('DELETE FROM users');
-    
+
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
@@ -36,9 +36,9 @@ export async function cleanDatabase() {
 /**
  * Create a test user
  */
-export async function createTestUser(userData = {}) {
+export async function createTestUser (userData = {}) {
   const client = await getClient();
-  
+
   const defaultData = {
     email: 'test@example.com',
     password_hash: '$2a$10$dummyhashfortest',
@@ -46,7 +46,7 @@ export async function createTestUser(userData = {}) {
     role: 'loja',
     ...userData
   };
-  
+
   try {
     const result = await client.query(
       `INSERT INTO users (email, password_hash, nome, role, credit_limit, credit_used)
@@ -61,7 +61,7 @@ export async function createTestUser(userData = {}) {
         defaultData.credit_used || 0
       ]
     );
-    
+
     return result.rows[0];
   } finally {
     client.release();
@@ -71,9 +71,9 @@ export async function createTestUser(userData = {}) {
 /**
  * Create a test product
  */
-export async function createTestProduct(productData = {}) {
+export async function createTestProduct (productData = {}) {
   const client = await getClient();
-  
+
   const defaultData = {
     codigo: Math.floor(Math.random() * 100000),
     nome: 'Test Product',
@@ -81,7 +81,7 @@ export async function createTestProduct(productData = {}) {
     categoria: 'Teste',
     ...productData
   };
-  
+
   try {
     const result = await client.query(
       `INSERT INTO products (codigo, nome, preco, categoria, estoque, unidade)
@@ -96,7 +96,7 @@ export async function createTestProduct(productData = {}) {
         defaultData.unidade || 'UN'
       ]
     );
-    
+
     return result.rows[0];
   } finally {
     client.release();
@@ -106,9 +106,9 @@ export async function createTestProduct(productData = {}) {
 /**
  * Create a test order
  */
-export async function createTestOrder(orderData = {}) {
+export async function createTestOrder (orderData = {}) {
   const client = await getClient();
-  
+
   const defaultData = {
     loja_id: orderData.loja_id,
     payment_terms: 'Antecipado',
@@ -119,10 +119,10 @@ export async function createTestOrder(orderData = {}) {
     items: orderData.items || [],
     ...orderData
   };
-  
+
   try {
     await client.query('BEGIN');
-    
+
     // Create order
     const orderResult = await client.query(
       `INSERT INTO orders (loja_id, payment_terms, subtotal, discount, discount_percentage, total, status)
@@ -138,9 +138,9 @@ export async function createTestOrder(orderData = {}) {
         defaultData.status || 'pendente'
       ]
     );
-    
+
     const order = orderResult.rows[0];
-    
+
     // Create order items
     if (defaultData.items.length > 0) {
       for (const item of defaultData.items) {
@@ -151,7 +151,7 @@ export async function createTestOrder(orderData = {}) {
         );
       }
     }
-    
+
     await client.query('COMMIT');
     return order;
   } catch (error) {
@@ -165,7 +165,7 @@ export async function createTestOrder(orderData = {}) {
 /**
  * Generate JWT token for testing
  */
-export function generateTestToken(user) {
+export function generateTestToken (user) {
   const jwt = require('jsonwebtoken');
   return jwt.sign(
     {
