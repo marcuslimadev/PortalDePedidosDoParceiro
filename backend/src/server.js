@@ -19,10 +19,26 @@ import notificationsRouter from './routes/notifications.js';
 import { registerEventListeners } from './services/eventListeners.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { securityHeaders, enforceHttps } from './middleware/security.js';
+import { 
+  initSentry, 
+  sentryRequestHandler, 
+  sentryTracingHandler, 
+  sentryErrorHandler 
+} from './config/sentry.js';
 
 dotenv.config();
 
 const app = express();
+
+// Initialize Sentry BEFORE other middleware
+initSentry(app);
+
+// Sentry request handler must be the first middleware
+app.use(sentryRequestHandler());
+
+// Sentry tracing middleware
+app.use(sentryTracingHandler());
+
 app.use(cors());
 app.use(express.json());
 
@@ -98,6 +114,22 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/winthor', winthorRouter);
 app.use('/api/reports', reportsRouter);
+
+// Sentry error handler must be AFTER all routes but BEFORE other error handlers
+app.use(sentryErrorHandler());
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  
+  const status = err.status || 500;
+  const message = err.message || 'Erro interno do servidor';
+  
+  res.status(status).json({
+    error: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
 
 const port = process.env.PORT || 3000;
 

@@ -12,6 +12,7 @@ export default defineConfig({
     host: '0.0.0.0'
   },
   build: {
+    sourcemap: true, // Enable source maps for Sentry
     rollupOptions: {
       input: {
         main: './index.html',
@@ -20,7 +21,8 @@ export default defineConfig({
       output: {
         entryFileNames: (chunkInfo) => {
           return chunkInfo.name === 'sw' ? 'service-worker.js' : 'assets/[name]-[hash].js';
-        }
+        },
+        sourcemapExcludeSources: true // Don't include source code in maps
       }
     }
   }

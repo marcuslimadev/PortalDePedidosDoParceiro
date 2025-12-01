@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as Sentry from '@sentry/vue';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -17,12 +18,65 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle errors and send to Sentry
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Log API errors to Sentry
+    if (error.response) {
+      // Server responded with error
+      const status = error.response.status;
+      
+      // Only log 5xx errors to Sentry (server errors)
+      if (status >= 500) {
+        Sentry.captureException(error, {
+          contexts: {
+            api: {
+              url: error.config.url,
+              method: error.config.method,
+              status: status,
+              data: error.response.data,
+            },
+          },
+          tags: {
+            api_error: true,
+            status_code: status,
+          },
+        });
+      }
+    } else if (error.request) {
+      // Request made but no response (network error)
+      Sentry.captureException(error, {
+        contexts: {
+          network: {
+            url: error.config.url,
+            method: error.config.method,
+          },
+        },
+        tags: {
+          network_error: true,
+        },
+      });
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 export const authService = {
   async login(email, password) {
     const response = await api.post('/auth/login', { email, password });
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Set user context in Sentry
+      Sentry.setUser({
+        id: response.data.user.id,
+        email: response.data.user.email,
+        username: response.data.user.nome,
+        role: response.data.user.role,
+      });
     }
     return response.data;
   },
@@ -32,6 +86,14 @@ export const authService = {
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Set user context in Sentry
+      Sentry.setUser({
+        id: response.data.user.id,
+        email: response.data.user.email,
+        username: response.data.user.nome,
+        role: response.data.user.role,
+      });
     }
     return response.data;
   },
@@ -44,6 +106,9 @@ export const authService = {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    // Clear user context in Sentry
+    Sentry.setUser(null);
   },
 
   getToken() {

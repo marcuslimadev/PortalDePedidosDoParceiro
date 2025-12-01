@@ -1,6 +1,6 @@
 # Plano Completo de Desenvolvimento - Portal de Pedidos do Parceiro
 
-## 📊 Status do Projeto: 86% concluído (73/85 funcionalidades)
+## 📊 Status do Projeto: 87% concluído (74/85 funcionalidades)
 
 ---
 
@@ -103,12 +103,12 @@
 - [x] HTTPS obrigatório em produção
 - [x] Backup automático do banco
 
-## 10. DevOps & Qualidade (3/5 - 60%)
+## 10. DevOps & Qualidade (4/5 - 80%)
 - [x] Testes unitários (backend)
 - [x] Testes de integração
 - [ ] Testes E2E (frontend)
 - [x] CI/CD pipeline (GitHub Actions)
-- [ ] Monitoramento e alertas (Render/Sentry)
+- [x] Monitoramento e alertas (Sentry)
 
 ---
 
