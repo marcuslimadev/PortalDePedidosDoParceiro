@@ -159,28 +159,13 @@ async function startServer () {
     const productsCount = Number(existingProducts.rows[0]?.total || 0);
     const clientsCount = Number(existingClients.rows[0]?.total || 0);
     console.log(`Seed sincronizado. Produtos: ${productsCount}, clientes: ${clientsCount}`);
-
-    // Start listening DENTRO do try para garantir que rode
-    const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`✅ API rodando na porta ${port}`);
-      console.log(`🌐 http://localhost:${port}/api`);
-    });
-
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE') {
-        console.error(`❌ Porta ${port} já está em uso. Tente outra porta.`);
-        process.exit(1);
-      } else {
-        console.error('❌ Erro ao iniciar servidor:', error);
-        process.exit(1);
-      }
-    });
-
   } catch (error) {
-    console.error('❌ Falha ao iniciar servidor:', error);
-    console.error(error.stack);
-    process.exit(1);
+    console.error('Falha ao garantir usuário admin padrão:', error);
   }
+
+  app.listen(port, () => {
+    console.log(`API rodando na porta ${port}`);
+  });
 }
 
 startServer();
