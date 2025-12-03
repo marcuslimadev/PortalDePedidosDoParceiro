@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import { createOrder, exportOrdersCsv, listOrders, openOrdersSummary, repeatOrder, updateOrderStatus } from '../controllers/orderController.js';
+import { createOrder, exportOrdersCsv, listOrders, openOrdersSummary, repeatOrder, updateOrderStatus, getOrderById, cancelOrder } from '../controllers/orderController.js';
 import { eventBus } from '../events/eventBus.js';
 import { orderCreationLimiter, exportLimiter } from '../middleware/rateLimiter.js';
 import { auditMiddleware } from '../middleware/audit.js';
@@ -39,8 +39,10 @@ router.get('/stream', (req, res) => {
     res.end();
   });
 });
+router.get('/:id', getOrderById);
 router.post('/', requireRole('loja'), orderCreationLimiter, auditMiddleware('create', 'order'), createOrder);
 router.post('/:id/repeat', requireRole('loja'), orderCreationLimiter, auditMiddleware('create', 'order'), repeatOrder);
+router.post('/:id/cancel', requireRole('operador', 'admin'), auditMiddleware('cancel', 'order'), cancelOrder);
 router.patch('/:id/status', requireRole('operador', 'admin'), auditMiddleware('update', 'order'), updateOrderStatus);
 
 export default router;

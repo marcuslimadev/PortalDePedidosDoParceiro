@@ -271,7 +271,7 @@ export const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const allowedStatus = ['pendente', 'aprovado', 'cancelado'];
+  const allowedStatus = ['pendente', 'aprovado', 'em_separacao', 'faturado', 'cancelado'];
   if (!allowedStatus.includes(status)) {
     return res.status(400).json({ error: 'Status inválido' });
   }
@@ -538,5 +538,136 @@ export const exportOrdersCsv = async (req, res) => {
   } catch (error) {
     console.error('Erro ao exportar pedidos:', error);
     res.status(500).json({ error: 'Não foi possível exportar os pedidos' });
+  }
+};
+
+export const getOrderById = async (req, res) => {
+  const { id } = req.params;
+  const isLoja = req.user.role === 'loja';
+
+  try {
+    let orderQuery = `
+      SELECT o.id, o.loja_id, o.status, o.payment_terms, o.observations, 
+             o.subtotal, o.discount, o.discount_percentage, o.total, 
+             o.created_at, o.updated_at,
+             u.nome AS loja_nome, u.email AS loja_email
+        FROM orders o
+        JOIN users u ON u.id = o.loja_id
+       WHERE o.id = $1
+    `;
+    const params = [id];
+
+    if (isLoja) {
+      orderQuery += ` AND o.loja_id = $2`;
+      params.push(req.user.id);
+    }
+
+    const orderResult = await query(orderQuery, params);
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+
+    const order = orderResult.rows[0];
+
+    const itemsResult = await query(
+      `SELECT oi.id, oi.product_id, oi.quantidade, oi.preco_unitario, oi.subtotal,
+              p.codigo AS produto_codigo, p.descricao AS produto_descricao
+         FROM order_items oi
+         JOIN products p ON p.id = oi.product_id
+        WHERE oi.order_id = $1`,
+      [id]
+    );
+
+    res.json({
+      ...order,
+      items: itemsResult.rows
+    });
+  } catch (error) {
+    console.error('Erro ao buscar pedido:', error);
+    res.status(500).json({ error: 'Erro ao buscar pedido' });
+  }
+};
+
+export const cancelOrder = async (req, res) => {
+  const { id } = req.params;
+  const { motivo } = req.body;
+
+  if (!motivo || motivo.trim().length < 3) {
+    return res.status(400).json({ error: 'Informe um motivo válido para o cancelamento' });
+  }
+
+  const client = await getClient();
+
+  try {
+    await client.query('BEGIN');
+
+    const orderResult = await client.query(
+      `SELECT o.id, o.loja_id, o.status, o.total, u.nome AS loja_nome
+         FROM orders o
+         JOIN users u ON u.id = o.loja_id
+        WHERE o.id = $1
+        FOR UPDATE`,
+      [id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+
+    const order = orderResult.rows[0];
+
+    if (order.status === 'cancelado') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Pedido já está cancelado' });
+    }
+
+    if (order.status === 'faturado') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Não é possível cancelar pedido já faturado' });
+    }
+
+    // Restaurar estoque dos itens
+    const itemsResult = await client.query(
+      `SELECT product_id, quantidade FROM order_items WHERE order_id = $1`,
+      [id]
+    );
+
+    for (const item of itemsResult.rows) {
+      await client.query(
+        `UPDATE products SET estoque = estoque + $1, updated_at = NOW() WHERE id = $2`,
+        [item.quantidade, item.product_id]
+      );
+    }
+
+    // Restaurar crédito do cliente
+    await client.query(
+      `UPDATE users SET credit_used = GREATEST(0, COALESCE(credit_used, 0) - $1), updated_at = NOW() WHERE id = $2`,
+      [order.total, order.loja_id]
+    );
+
+    // Atualizar status do pedido
+    await client.query(
+      `UPDATE orders SET status = 'cancelado', observations = COALESCE(observations, '') || E'\n[CANCELADO] ' || $1, updated_at = NOW() WHERE id = $2`,
+      [motivo, id]
+    );
+
+    await client.query('COMMIT');
+
+    eventBus.emit('order-event', {
+      type: 'order.cancelled',
+      lojaId: order.loja_id,
+      payload: { orderId: id, motivo, cancelledBy: req.user.email },
+      motivo
+    });
+
+    res.json({ message: 'Pedido cancelado com sucesso', orderId: id, motivo });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Erro ao cancelar pedido:', error);
+    res.status(500).json({ error: 'Erro ao cancelar pedido' });
+  } finally {
+    client.release();
   }
 };

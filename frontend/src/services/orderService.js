@@ -68,6 +68,16 @@ export const orderService = {
       }
       throw error;
     }
+  },
+
+  async getById(orderId) {
+    const response = await api.get(`/orders/${orderId}`);
+    return response.data;
+  },
+
+  async cancel(orderId, motivo) {
+    const response = await api.post(`/orders/${orderId}/cancel`, { motivo });
+    return response.data;
   }
 };
 

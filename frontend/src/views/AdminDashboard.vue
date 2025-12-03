@@ -75,10 +75,18 @@
               <div>
                 <p class="heading">Catalogo de produtos</p>
                 <p class="title is-5">Listagem, API e CSV completos</p>
-                <p class="is-size-7 has-text-grey">Somente leitura aqui; cadastros e edicao via integracao ou importacao.</p>
+                <p class="is-size-7 has-text-grey">Gerencie o catálogo de produtos com opções de importação, exportação e exclusão.</p>
               </div>
             </div>
             <div class="level-right buttons">
+              <button class="button is-danger is-light" @click="deleteAllProducts" :disabled="deletingProducts || !products.length">
+                <span class="icon"><i class="fas fa-trash-alt"></i></span>
+                <span>Excluir todos</span>
+              </button>
+              <button class="button is-danger" @click="deleteSelectedProducts" :disabled="deletingProducts || selectedProducts.length === 0">
+                <span class="icon"><i class="fas fa-trash"></i></span>
+                <span>Excluir selecionados ({{ selectedProducts.length }})</span>
+              </button>
               <button class="button is-link is-light" @click="reloadProducts" :disabled="loadingProducts">
                 <span class="icon"><i class="fas fa-sync-alt"></i></span>
                 <span>Recarregar</span>
@@ -118,9 +126,14 @@
           </div>
 
           <div class="table-container">
-            <table class="table is-fullwidth is-striped">
+            <table class="table is-fullwidth is-striped is-hoverable">
               <thead>
                 <tr>
+                  <th style="width: 40px;">
+                    <label class="checkbox">
+                      <input type="checkbox" :checked="allProductsSelected" @change="toggleAllProducts">
+                    </label>
+                  </th>
                   <th>Codigo</th>
                   <th>Descricao</th>
                   <th>Preco</th>
@@ -128,19 +141,25 @@
                   <th>Tributacao</th>
                   <th>Estoque</th>
                   <th>Categoria</th>
+                  <th style="width: 80px;">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="!products.length && !loadingProducts">
-                  <td colspan="7" class="has-text-centered has-text-grey">Nenhum produto encontrado. Utilize a importacao CSV ou a API.</td>
+                  <td colspan="9" class="has-text-centered has-text-grey">Nenhum produto encontrado. Utilize a importacao CSV ou a API.</td>
                 </tr>
                 <tr v-if="loadingProducts">
-                  <td colspan="7" class="has-text-centered">
+                  <td colspan="9" class="has-text-centered">
                     <span class="icon has-text-info"><i class="fas fa-spinner fa-spin"></i></span>
                     Carregando catalogo...
                   </td>
                 </tr>
-                <tr v-for="product in products" :key="product.id">
+                <tr v-for="product in products" :key="product.id" :class="{ 'is-selected': selectedProducts.includes(product.id) }">
+                  <td>
+                    <label class="checkbox">
+                      <input type="checkbox" :value="product.id" v-model="selectedProducts">
+                    </label>
+                  </td>
                   <td><span class="tag is-light is-uppercase">{{ product.codigo }}</span></td>
                   <td>{{ product.descricao }}</td>
                   <td>R$ {{ Number(product.preco).toFixed(2) }}</td>
@@ -148,6 +167,11 @@
                   <td>{{ product.tributacao }}</td>
                   <td>{{ product.estoque }}</td>
                   <td>{{ product.categoria || '-' }}</td>
+                  <td>
+                    <button class="button is-small is-danger is-outlined" @click="deleteSingleProduct(product)" :disabled="deletingProducts">
+                      <span class="icon"><i class="fas fa-trash"></i></span>
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -351,6 +375,197 @@
             </div>
           </div>
         </div>
+
+        <!-- SEÇÃO DE PEDIDOS -->
+        <div class="box mt-6">
+          <div class="level mb-4">
+            <div class="level-left">
+              <div>
+                <p class="heading">Gestao de pedidos</p>
+                <p class="title is-5">Todos os pedidos do sistema</p>
+              </div>
+            </div>
+            <div class="level-right">
+              <div class="buttons">
+                <div class="field has-addons">
+                  <p class="control">
+                    <span class="select">
+                      <select v-model="ordersFilter">
+                        <option value="">Todos</option>
+                        <option value="pendente">Pendentes</option>
+                        <option value="aprovado">Aprovados</option>
+                        <option value="em_separacao">Em Separação</option>
+                        <option value="faturado">Faturados</option>
+                        <option value="cancelado">Cancelados</option>
+                      </select>
+                    </span>
+                  </p>
+                </div>
+                <button class="button is-light" :class="{ 'is-loading': downloadingOrdersCsv }" @click="exportOrdersCsv">
+                  <span class="icon"><i class="fas fa-file-download"></i></span>
+                  <span>Exportar CSV</span>
+                </button>
+                <button class="button is-primary" :class="{ 'is-loading': loadingOrders }" @click="loadOrders">
+                  <span class="icon"><i class="fas fa-sync-alt"></i></span>
+                  <span>Atualizar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-container orders-table">
+            <table class="table is-fullwidth is-hoverable is-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Pagamento</th>
+                  <th class="has-text-right">Total</th>
+                  <th class="has-text-centered">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="loadingOrders">
+                  <td colspan="7" class="has-text-centered py-4">
+                    <span class="icon has-text-primary"><i class="fas fa-spinner fa-spin"></i></span>
+                    Carregando pedidos...
+                  </td>
+                </tr>
+                <tr v-else-if="!filteredOrders.length">
+                  <td colspan="7" class="has-text-centered has-text-grey py-4">
+                    Nenhum pedido encontrado.
+                  </td>
+                </tr>
+                <tr v-for="order in filteredOrders" :key="order.id">
+                  <td>
+                    <span class="has-text-weight-bold">#{{ order.id }}</span>
+                  </td>
+                  <td>
+                    <p class="has-text-weight-semibold">{{ order.loja_nome || 'Cliente ' + order.loja_id }}</p>
+                    <p class="is-size-7 has-text-grey">{{ order.loja_email || '' }}</p>
+                  </td>
+                  <td>
+                    <p>{{ formatDate(order.created_at) }}</p>
+                    <p class="is-size-7 has-text-grey">{{ formatTime(order.created_at) }}</p>
+                  </td>
+                  <td>
+                    <span class="tag" :class="orderStatusClass(order.status)">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td>{{ order.payment_terms || '30 dias' }}</td>
+                  <td class="has-text-right has-text-weight-bold">
+                    {{ formatCurrency(order.total) }}
+                  </td>
+                  <td class="has-text-centered">
+                    <div class="buttons is-centered are-small">
+                      <button 
+                        v-if="order.status === 'pendente'" 
+                        class="button is-success is-small"
+                        @click="updateOrderStatus(order.id, 'aprovado')"
+                        :disabled="updatingOrder === order.id"
+                      >
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                      </button>
+                      <button 
+                        v-if="order.status === 'aprovado'" 
+                        class="button is-info is-small"
+                        @click="updateOrderStatus(order.id, 'em_separacao')"
+                        :disabled="updatingOrder === order.id"
+                      >
+                        <span class="icon"><i class="fas fa-box"></i></span>
+                      </button>
+                      <button 
+                        v-if="order.status === 'em_separacao'" 
+                        class="button is-primary is-small"
+                        @click="updateOrderStatus(order.id, 'faturado')"
+                        :disabled="updatingOrder === order.id"
+                      >
+                        <span class="icon"><i class="fas fa-file-invoice"></i></span>
+                      </button>
+                      <button 
+                        v-if="order.status !== 'cancelado' && order.status !== 'faturado'" 
+                        class="button is-danger is-small is-outlined"
+                        @click="cancelOrder(order.id)"
+                        :disabled="updatingOrder === order.id"
+                      >
+                        <span class="icon"><i class="fas fa-times"></i></span>
+                      </button>
+                      <button 
+                        class="button is-light is-small"
+                        @click="viewOrderDetails(order)"
+                      >
+                        <span class="icon"><i class="fas fa-eye"></i></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Modal de Detalhes do Pedido -->
+        <div class="modal" :class="{ 'is-active': showOrderModal }">
+          <div class="modal-background" @click="showOrderModal = false"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Pedido #{{ selectedOrder?.id }}</p>
+              <button class="delete" @click="showOrderModal = false"></button>
+            </header>
+            <section class="modal-card-body" v-if="selectedOrder">
+              <div class="columns">
+                <div class="column is-6">
+                  <p class="heading">Cliente</p>
+                  <p class="has-text-weight-bold">{{ selectedOrder.loja_nome }}</p>
+                  <p class="is-size-7">{{ selectedOrder.loja_email }}</p>
+                </div>
+                <div class="column is-6 has-text-right">
+                  <p class="heading">Status</p>
+                  <span class="tag is-medium" :class="orderStatusClass(selectedOrder.status)">
+                    {{ selectedOrder.status }}
+                  </span>
+                </div>
+              </div>
+              <hr>
+              <p class="heading">Itens do Pedido</p>
+              <table class="table is-fullwidth is-size-7">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th class="has-text-centered">Qtd</th>
+                    <th class="has-text-right">Unitário</th>
+                    <th class="has-text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in selectedOrder.items" :key="item.id">
+                    <td>{{ item.produto_descricao || item.product_id }}</td>
+                    <td class="has-text-centered">{{ item.quantidade }}</td>
+                    <td class="has-text-right">{{ formatCurrency(item.preco_unitario) }}</td>
+                    <td class="has-text-right">{{ formatCurrency(item.subtotal) }}</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th colspan="3" class="has-text-right">Total:</th>
+                    <th class="has-text-right">{{ formatCurrency(selectedOrder.total) }}</th>
+                  </tr>
+                </tfoot>
+              </table>
+              <div v-if="selectedOrder.observations" class="notification is-light">
+                <p class="heading">Observações</p>
+                <p>{{ selectedOrder.observations }}</p>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button class="button" @click="showOrderModal = false">Fechar</button>
+            </footer>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -373,9 +588,23 @@ const products = ref([]);
 const loadingProducts = ref(false);
 const exportingProducts = ref(false);
 const importingProducts = ref(false);
+const deletingProducts = ref(false);
+const selectedProducts = ref([]);
 const searchTerm = ref('');
 const productFeedback = reactive({ message: '', type: 'is-primary' });
 const fileInput = ref(null);
+
+const allProductsSelected = computed(() => {
+  return products.value.length > 0 && selectedProducts.value.length === products.value.length;
+});
+
+const toggleAllProducts = () => {
+  if (allProductsSelected.value) {
+    selectedProducts.value = [];
+  } else {
+    selectedProducts.value = products.value.map(p => p.id);
+  }
+};
 
 // Clientes
 const clients = ref([]);
@@ -403,6 +632,19 @@ const statusOptions = ['ativo', 'inativo', 'bloqueado'];
 const paymentOptions = ['30 dias', '45 dias', '60 dias', '90 dias'];
 const hasClientSelected = computed(() => clientForm.id !== null);
 
+// Pedidos
+const orders = ref([]);
+const loadingOrders = ref(false);
+const ordersFilter = ref('');
+const updatingOrder = ref(null);
+const showOrderModal = ref(false);
+const selectedOrder = ref(null);
+
+const filteredOrders = computed(() => {
+  if (!ordersFilter.value) return orders.value;
+  return orders.value.filter(o => o.status === ordersFilter.value);
+});
+
 onMounted(() => {
   user.value = authService.getUser();
   if (!user.value || user.value.role !== 'admin') {
@@ -411,6 +653,7 @@ onMounted(() => {
   }
   loadProducts();
   loadClients();
+  loadOrders();
 });
 
 const handleLogout = () => {
@@ -477,6 +720,74 @@ const handleImportChange = async (event) => {
   } finally {
     importingProducts.value = false;
     event.target.value = '';
+  }
+};
+
+const deleteSingleProduct = async (product) => {
+  if (!confirm(`Deseja excluir o produto "${product.descricao}" (${product.codigo})?`)) return;
+  
+  deletingProducts.value = true;
+  productFeedback.message = '';
+  try {
+    await productService.delete(product.id);
+    productFeedback.message = `Produto "${product.codigo}" excluído com sucesso`;
+    productFeedback.type = 'is-success';
+    await loadProducts();
+    selectedProducts.value = selectedProducts.value.filter(id => id !== product.id);
+  } catch (error) {
+    productFeedback.message = error.response?.data?.error || 'Erro ao excluir produto';
+    productFeedback.type = 'is-danger';
+  } finally {
+    deletingProducts.value = false;
+  }
+};
+
+const deleteSelectedProducts = async () => {
+  if (selectedProducts.value.length === 0) return;
+  
+  const count = selectedProducts.value.length;
+  if (!confirm(`Deseja excluir ${count} produto(s) selecionado(s)?`)) return;
+  
+  deletingProducts.value = true;
+  productFeedback.message = '';
+  try {
+    await productService.deleteMany(selectedProducts.value);
+    productFeedback.message = `${count} produto(s) excluído(s) com sucesso`;
+    productFeedback.type = 'is-success';
+    selectedProducts.value = [];
+    await loadProducts();
+  } catch (error) {
+    productFeedback.message = error.response?.data?.error || 'Erro ao excluir produtos';
+    productFeedback.type = 'is-danger';
+  } finally {
+    deletingProducts.value = false;
+  }
+};
+
+const deleteAllProducts = async () => {
+  if (!confirm(`⚠️ ATENÇÃO: Isso irá excluir TODOS os ${products.value.length} produtos!\n\nEsta ação não pode ser desfeita. Deseja continuar?`)) return;
+  if (!confirm('Tem certeza absoluta? Digite "EXCLUIR" no próximo prompt para confirmar.')) return;
+  
+  const confirmText = prompt('Digite EXCLUIR para confirmar:');
+  if (confirmText !== 'EXCLUIR') {
+    productFeedback.message = 'Operação cancelada';
+    productFeedback.type = 'is-warning';
+    return;
+  }
+  
+  deletingProducts.value = true;
+  productFeedback.message = '';
+  try {
+    await productService.deleteAll();
+    productFeedback.message = 'Todos os produtos foram excluídos';
+    productFeedback.type = 'is-success';
+    selectedProducts.value = [];
+    await loadProducts();
+  } catch (error) {
+    productFeedback.message = error.response?.data?.error || 'Erro ao excluir todos os produtos';
+    productFeedback.type = 'is-danger';
+  } finally {
+    deletingProducts.value = false;
   }
 };
 
@@ -666,18 +977,105 @@ const formatDateTime = (value) => {
     timeStyle: 'short'
   }).format(new Date(value));
 };
+
+// Funções de Pedidos
+const loadOrders = async () => {
+  loadingOrders.value = true;
+  try {
+    const response = await orderService.list();
+    orders.value = response.orders || response || [];
+  } catch (error) {
+    console.error('Erro ao carregar pedidos:', error);
+    clientFeedback.message = 'Erro ao carregar pedidos';
+    clientFeedback.type = 'is-danger';
+  } finally {
+    loadingOrders.value = false;
+  }
+};
+
+const formatDate = (value) => {
+  if (!value) return '-';
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(value));
+};
+
+const formatTime = (value) => {
+  if (!value) return '';
+  return new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' }).format(new Date(value));
+};
+
+const orderStatusClass = (status) => {
+  const classes = {
+    pendente: 'is-warning',
+    aprovado: 'is-success',
+    em_separacao: 'is-info',
+    faturado: 'is-primary',
+    cancelado: 'is-danger'
+  };
+  return classes[status] || 'is-light';
+};
+
+const updateOrderStatus = async (orderId, newStatus) => {
+  updatingOrder.value = orderId;
+  try {
+    await orderService.updateStatus(orderId, newStatus);
+    await loadOrders();
+    clientFeedback.message = `Pedido #${orderId} atualizado para ${newStatus}`;
+    clientFeedback.type = 'is-success';
+  } catch (error) {
+    clientFeedback.message = error.response?.data?.error || 'Erro ao atualizar pedido';
+    clientFeedback.type = 'is-danger';
+  } finally {
+    updatingOrder.value = null;
+  }
+};
+
+const cancelOrder = async (orderId) => {
+  const motivo = window.prompt('Motivo do cancelamento:');
+  if (!motivo) return;
+  
+  updatingOrder.value = orderId;
+  try {
+    await orderService.cancel(orderId, motivo);
+    await loadOrders();
+    clientFeedback.message = `Pedido #${orderId} cancelado`;
+    clientFeedback.type = 'is-warning';
+  } catch (error) {
+    clientFeedback.message = error.response?.data?.error || 'Erro ao cancelar pedido';
+    clientFeedback.type = 'is-danger';
+  } finally {
+    updatingOrder.value = null;
+  }
+};
+
+const viewOrderDetails = async (order) => {
+  try {
+    const details = await orderService.getById(order.id);
+    selectedOrder.value = details;
+    showOrderModal.value = true;
+  } catch (error) {
+    clientFeedback.message = 'Erro ao carregar detalhes do pedido';
+    clientFeedback.type = 'is-danger';
+  }
+};
 </script>
 
 <style scoped>
+.dashboard {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
 .kpi-grid .box {
   border: none;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 20px var(--shadow-color);
+  background: var(--card-bg);
 }
 
 .kpi-box {
   min-width: 240px;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(30, 58, 95, 0.25);
+  box-shadow: 0 8px 24px var(--shadow-color);
+  background: var(--accent-primary) !important;
 }
 
 .table td,
@@ -695,17 +1093,17 @@ const formatDateTime = (value) => {
 }
 
 .clients-table tr.is-selected-row {
-  background: #eef6ff;
+  background: var(--bg-hover);
 }
 
 .client-form {
-  border: 1px dashed rgba(0, 0, 0, 0.1);
+  border: 1px dashed var(--border-color);
   border-radius: 12px;
 }
 
 .history-box {
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--bg-secondary);
 }
 
 .history-timeline {
@@ -718,7 +1116,7 @@ const formatDateTime = (value) => {
 
 .history-item {
   padding: 0.75rem 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .history-item:last-child {
@@ -726,8 +1124,19 @@ const formatDateTime = (value) => {
 }
 
 .box.is-light {
-  background: #f8fafc;
+  background: var(--bg-secondary);
   border-radius: 10px;
+}
+
+.navbar {
+  background: var(--accent-primary) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.box {
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 </style>
 

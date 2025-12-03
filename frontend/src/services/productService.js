@@ -59,6 +59,20 @@ export const productService = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
+  },
+
+  async delete(id) {
+    await api.delete(`/products/${id}`);
+  },
+
+  async deleteMany(ids) {
+    const response = await api.post('/products/delete-many', { ids });
+    return response.data;
+  },
+
+  async deleteAll() {
+    const response = await api.delete('/products/all');
+    return response.data;
   }
 };
 

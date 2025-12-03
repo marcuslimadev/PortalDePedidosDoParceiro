@@ -205,16 +205,95 @@ export const getProductPriceHistory = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
+    
+    // Verificar se há itens de pedido referenciando este produto
+    const orderItems = await query('SELECT id FROM order_items WHERE product_id = $1 LIMIT 1', [id]);
+    if (orderItems.rows.length > 0) {
+      return res.status(400).json({ error: 'Não é possível excluir: produto tem pedidos associados' });
+    }
+    
+    // Remover histórico de preços
+    await query('DELETE FROM product_price_history WHERE product_id = $1', [id]);
+    
+    const result = await query('DELETE FROM products WHERE id = $1 RETURNING id, codigo', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
 
-    res.json({ message: 'Produto removido com sucesso' });
+    res.json({ message: 'Produto removido com sucesso', product: result.rows[0] });
   } catch (error) {
     console.error('Erro ao remover produto:', error);
     res.status(500).json({ error: 'Erro ao remover produto' });
+  }
+};
+
+export const deleteManyProducts = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Informe os IDs dos produtos a excluir' });
+    }
+    
+    // Verificar se há itens de pedido referenciando estes produtos
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+    const orderItems = await query(
+      `SELECT DISTINCT product_id FROM order_items WHERE product_id IN (${placeholders})`,
+      ids
+    );
+    
+    if (orderItems.rows.length > 0) {
+      const productsWithOrders = orderItems.rows.map(r => r.product_id);
+      return res.status(400).json({ 
+        error: `Não é possível excluir: ${productsWithOrders.length} produto(s) têm pedidos associados`,
+        productsWithOrders
+      });
+    }
+    
+    // Remover histórico de preços
+    await query(`DELETE FROM product_price_history WHERE product_id IN (${placeholders})`, ids);
+    
+    const result = await query(
+      `DELETE FROM products WHERE id IN (${placeholders}) RETURNING id`,
+      ids
+    );
+
+    res.json({ 
+      message: `${result.rowCount} produto(s) removido(s) com sucesso`,
+      deleted: result.rowCount
+    });
+  } catch (error) {
+    console.error('Erro ao remover produtos:', error);
+    res.status(500).json({ error: 'Erro ao remover produtos' });
+  }
+};
+
+export const deleteAllProducts = async (req, res) => {
+  try {
+    // Verificar se há pedidos
+    const orders = await query('SELECT id FROM orders LIMIT 1');
+    if (orders.rows.length > 0) {
+      // Remover itens de pedidos primeiro (ou retornar erro)
+      await query('DELETE FROM order_items');
+    }
+    
+    // Remover histórico de preços
+    await query('DELETE FROM product_price_history');
+    
+    // Remover todos os produtos
+    const result = await query('DELETE FROM products RETURNING id');
+    
+    // Resetar sequence
+    await query('ALTER SEQUENCE products_id_seq RESTART WITH 1');
+
+    res.json({ 
+      message: `${result.rowCount} produto(s) removido(s) com sucesso`,
+      deleted: result.rowCount
+    });
+  } catch (error) {
+    console.error('Erro ao remover todos os produtos:', error);
+    res.status(500).json({ error: 'Erro ao remover todos os produtos' });
   }
 };
 

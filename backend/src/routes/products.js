@@ -6,6 +6,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteManyProducts,
+  deleteAllProducts,
   getProductPriceHistory,
   exportProductsCsv,
   importProductsCsv
@@ -21,6 +23,8 @@ router.use(authenticateToken);
 router.get('/', listProducts);
 router.get('/export/csv', requireRole('admin', 'operador'), exportProductsCsv);
 router.post('/import/csv', requireRole('admin', 'operador'), importProductsCsv);
+router.post('/delete-many', requireRole('admin'), deleteManyProducts);
+router.delete('/all', requireRole('admin'), deleteAllProducts);
 router.post('/', requireRole('admin', 'operador'), createProduct);
 router.get('/:id/history', requireRole('admin', 'operador'), getProductPriceHistory);
 router.put('/:id', requireRole('admin', 'operador'), updateProduct);

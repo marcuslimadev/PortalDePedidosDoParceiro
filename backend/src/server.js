@@ -147,10 +147,17 @@ const port = process.env.PORT || 3000;
 
 async function startServer () {
   try {
+    console.log('🚀 startServer() iniciou');
     // Garantir que a base esteja sempre atualizada em qualquer ambiente (Render/Docker/local)
+    console.log('📋 Chamando runMigrations()...');
     await runMigrations();
+    console.log('✅ runMigrations() completou');
+    
     // Sincroniza dados base sempre (idempotente: upsert de admin, operadores, clientes e catálogo mock)
+    console.log('📋 Chamando runSeed()...');
     await runSeed();
+    console.log('✅ runSeed() completou');
+    
     await ensureDefaultAdminUser();
 
     // Registrar listeners de eventos

@@ -581,14 +581,28 @@ const statusClass = (status) => {
 </script>
 
 <style scoped>
+.dashboard {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
 .quick-kpi {
   min-width: 220px;
   border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px var(--shadow-color);
+  background: var(--accent-muted) !important;
 }
 
 .navbar {
+  background: var(--accent-muted) !important;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
+}
+
+.box {
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .table td,
@@ -598,7 +612,7 @@ const statusClass = (status) => {
 
 .order-card {
   padding: 12px 0;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .notification-list {
@@ -609,7 +623,7 @@ const statusClass = (status) => {
 
 .notification-item {
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .notification-item:last-child {

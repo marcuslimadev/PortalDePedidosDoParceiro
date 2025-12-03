@@ -595,11 +595,12 @@ const downloadOrdersCsv = async () => {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  background: #f7f9fb;
+  background: var(--bg-primary);
 }
 
 .navbar {
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: var(--accent-secondary) !important;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .section {
@@ -607,12 +608,14 @@ const downloadOrdersCsv = async () => {
 }
 
 .box {
+  background: var(--card-bg);
   border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .kpi-box {
   min-width: 240px;
+  background: var(--accent-secondary) !important;
 }
 
 .kpi-grid .box {
@@ -620,7 +623,7 @@ const downloadOrdersCsv = async () => {
 }
 
 .kpi-grid .box:hover {
-  border-left-color: #0ea5e9;
+  border-left-color: var(--accent-secondary);
   transition: all 0.2s ease;
 }
 
@@ -634,15 +637,15 @@ const downloadOrdersCsv = async () => {
 
 .open-orders-box {
   border: none;
-  box-shadow: 0 20px 40px rgba(14, 165, 233, 0.08);
+  box-shadow: 0 8px 24px var(--shadow-color);
 }
 
 .summary-card {
-  background: #f8fafc;
+  background: var(--bg-secondary);
   border-radius: 12px;
   padding: 1.5rem;
   height: 100%;
-  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.1);
+  box-shadow: inset 0 0 0 1px var(--border-color);
 }
 
 .status-tags .tag {
@@ -657,10 +660,10 @@ const downloadOrdersCsv = async () => {
 }
 
 .aging-card {
-  border: 1px dashed rgba(14, 165, 233, 0.25);
+  border: 1px dashed var(--border-color);
   border-radius: 10px;
   padding: 0.75rem;
-  background: #f0f9ff;
+  background: var(--bg-secondary);
 }
 
 .queue-table {

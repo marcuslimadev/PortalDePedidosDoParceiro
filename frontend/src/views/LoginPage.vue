@@ -117,7 +117,7 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-page {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+  background: var(--bg-primary);
   min-height: 100vh;
 }
 
@@ -126,7 +126,50 @@ const handleLogin = async () => {
 }
 
 .box {
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px var(--shadow-color);
+  border: 1px solid var(--border-color);
+}
+
+.title {
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-muted);
+}
+
+.notification.is-info.is-light {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.label {
+  color: var(--text-primary);
+}
+
+.input {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(74, 107, 133, 0.2);
+}
+
+.has-text-grey {
+  color: var(--text-muted) !important;
+}
+
+.has-text-grey:hover {
+  color: var(--text-primary) !important;
 }
 </style>

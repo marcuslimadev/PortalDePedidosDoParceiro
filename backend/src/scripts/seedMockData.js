@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import { query, getClient } from '../config/database.js';
-import { runMigrations } from '../migrations/run.js';
 
 const __filename = fileURLToPath(import.meta.url);
+
 
 const adminUser = {
   email: 'admin@portalpedidos.com',
@@ -216,12 +216,13 @@ async function createOrderWithItems (orderTemplate, userMap, productMap) {
 }
 
 export async function runSeed () {
-  await runMigrations();
+  // Migrations são rodadas pelo server.js antes do seed
   console.log('>> Iniciando carga de dados mock...');
 
   const admin = await upsertUser(adminUser);
   const operador = await upsertUser(operatorUser);
   console.log('Usuarios base:', { admin, operador });
+
 
   const clientResults = [];
   for (const client of clientUsers) {
@@ -250,8 +251,9 @@ export async function runSeed () {
   console.log('- Clientes: loja1@cliente.com, loja2@cliente.com, loja3@cliente.com (senha cliente123)');
 }
 
-const isDirectRun = process.argv[1]?.endsWith('seedMockData.js');
-if (import.meta.url === `file://${__filename}` || isDirectRun) {
+// Apenas executa se rodado diretamente via CLI
+const isMainModule = process.argv[1] && process.argv[1].includes('seedMockData');
+if (isMainModule) {
   runSeed()
     .then(() => {
       console.log('Seed finalizado.');
