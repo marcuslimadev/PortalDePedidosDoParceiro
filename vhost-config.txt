@@ -1,0 +1,22 @@
+# Configuração do Virtual Host para XAMPP
+# Adicione ao arquivo: C:\xampp\apache\conf\extra\httpd-vhosts.conf
+
+<VirtualHost *:80>
+    DocumentRoot "C:/xampp/htdocs/PortalDePedidosDoParceiro/laravel/public"
+    ServerName portal-pedidos.local
+    ServerAlias www.portal-pedidos.local
+    
+    <Directory "C:/xampp/htdocs/PortalDePedidosDoParceiro/laravel/public">
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog "logs/portal-pedidos-error.log"
+    CustomLog "logs/portal-pedidos-access.log" common
+</VirtualHost>
+
+# Adicione ao arquivo: C:\Windows\System32\drivers\etc\hosts
+# 127.0.0.1 portal-pedidos.local
+
+# Após configurar, reinicie o Apache no XAMPP Control Panel
