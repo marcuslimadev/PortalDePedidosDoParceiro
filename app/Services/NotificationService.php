@@ -102,6 +102,19 @@ class NotificationService
     }
 
     /**
+     * Notifica aprovação de pedido
+     */
+    public static function notifyOrderApproved(Order $order): void
+    {
+        Notification::create([
+            'user_id' => $order->loja_id,
+            'type' => 'order.approved',
+            'title' => 'Pedido Aprovado',
+            'message' => "Pedido #{$order->id} foi aprovado com sucesso!",
+        ]);
+    }
+
+    /**
      * Notifica cancelamento de pedido
      */
     public static function notifyOrderCancelled(Order $order, string $reason): void

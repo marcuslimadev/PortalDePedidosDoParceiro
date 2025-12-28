@@ -12,7 +12,7 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'codigo' => fake()->unique()->bothify('PROD###??'),
+            'codigo' => fake()->unique()->numerify('###'),
             'descricao' => fake()->words(3, true),
             'unidade' => fake()->randomElement(['UN', 'CX', 'KG', 'LT', 'PC']),
             'preco' => fake()->randomFloat(2, 10, 1000),

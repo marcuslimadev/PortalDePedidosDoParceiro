@@ -2,21 +2,21 @@
 # Adicione ao arquivo: C:\xampp\apache\conf\extra\httpd-vhosts.conf
 
 <VirtualHost *:80>
-    DocumentRoot "C:/xampp/htdocs/PortalDePedidosDoParceiro/laravel/public"
-    ServerName portal-pedidos.local
-    ServerAlias www.portal-pedidos.local
+    DocumentRoot "C:/xampp/htdocs/ppp/public"
+    ServerName ppp.local
+    ServerAlias www.ppp.local
     
-    <Directory "C:/xampp/htdocs/PortalDePedidosDoParceiro/laravel/public">
+    <Directory "C:/xampp/htdocs/ppp/public">
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
     
-    ErrorLog "logs/portal-pedidos-error.log"
-    CustomLog "logs/portal-pedidos-access.log" common
+    ErrorLog "logs/ppp-error.log"
+    CustomLog "logs/ppp-access.log" common
 </VirtualHost>
 
 # Adicione ao arquivo: C:\Windows\System32\drivers\etc\hosts
-# 127.0.0.1 portal-pedidos.local
+# 127.0.0.1 ppp.local
 
 # Após configurar, reinicie o Apache no XAMPP Control Panel

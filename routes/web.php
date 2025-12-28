@@ -3,32 +3,26 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductImportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Middleware\CheckRole;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::redirect('/', '/dashboard');
+Route::get('/', function () {
+    return view('home');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard baseado em role
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        
-        $dashboardMap = [
-            'admin' => 'Admin/Dashboard',
-            'operador' => 'Operador/Dashboard',
-            'loja' => 'Loja/Dashboard',
-        ];
-        
-        return Inertia::render($dashboardMap[$user->role] ?? 'Dashboard', [
-            'user' => $user,
-        ]);
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Produtos
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/products-import', [ProductImportController::class, 'create'])->name('products.import');
+    Route::post('/products-import', [ProductImportController::class, 'store'])->name('products.import.store');
 
     // Pedidos
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -39,6 +33,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(CheckRole::class . ':loja')
         ->name('orders.store');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])
+        ->middleware(CheckRole::class . ':admin,operador')
+        ->name('orders.approve');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
+        ->middleware(CheckRole::class . ':admin,operador,loja')
+        ->name('orders.cancel');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
         ->middleware(CheckRole::class . ':admin,operador')
         ->name('orders.updateStatus');

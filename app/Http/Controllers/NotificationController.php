@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $notifications = $request->user()
             ->notifications()
             ->orderBy('created_at', 'desc')
             ->paginate(20);
             
-        return response()->json($notifications);
+        return view('notifications.index', [
+            'notifications' => $notifications,
+        ]);
     }
 
     public function unread(Request $request)
@@ -29,18 +32,18 @@ class NotificationController extends Controller
 
     public function markAsRead(Notification $notification)
     {
-        $notification->markAsRead();
-        return response()->json(['success' => true]);
+        $notification->update(['read_at' => now()]);
+        return back()->with('success', 'Notificação marcada como lida.');
     }
 
     public function markAllAsRead(Request $request)
     {
         $request->user()
             ->notifications()
-            ->unread()
+            ->whereNull('read_at')
             ->update(['read_at' => now()]);
             
-        return response()->json(['success' => true]);
+        return back()->with('success', 'Todas as notificações foram marcadas como lidas.');
     }
 }
 

@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Product::query();
         
         if ($request->search) {
@@ -23,16 +23,23 @@ class ProductController extends Controller
         $products = $query->orderBy('descricao')->paginate(20);
         $categorias = Product::distinct()->pluck('categoria')->filter();
         
-        return Inertia::render('Products/Index', [
+        $can = [
+            'create' => $user->isAdmin() || $user->isOperador(),
+            'edit' => $user->isAdmin() || $user->isOperador(),
+            'delete' => $user->isAdmin(),
+        ];
+        
+        return view('products.index', [
             'products' => $products,
             'categorias' => $categorias,
             'filters' => $request->only(['search', 'categoria']),
+            'can' => $can,
         ]);
     }
 
     public function show(Product $product)
     {
-        return Inertia::render('Products/Show', [
+        return view('products.show', [
             'product' => $product,
         ]);
     }

@@ -11,11 +11,11 @@ use App\Services\NotificationService;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $user = $request->user();
         
@@ -29,19 +29,35 @@ class OrderController extends Controller
             $query->where('status', $request->status);
         }
         
+        if ($request->search) {
+            $query->where('id', 'like', '%' . $request->search . '%');
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
         $orders = $query->orderBy('created_at', 'desc')->paginate(20);
         
-        return Inertia::render('Orders/Index', [
+        $can = [
+            'create' => $user->isLoja(),
+            'approve' => $user->isAdmin() || $user->isOperador(),
+            'cancel' => $user->isAdmin() || $user->isOperador(),
+        ];
+        
+        return view('orders.index', [
             'orders' => $orders,
+            'filters' => $request->only(['search', 'status', 'date_from']),
+            'can' => $can,
         ]);
     }
 
-    public function create()
+    public function create(): View
     {
         $products = Product::emEstoque()->get();
         $paymentTerms = PaymentService::getAvailableTerms();
         
-        return Inertia::render('Orders/Create', [
+        return view('orders.create', [
             'products' => $products,
             'paymentTerms' => $paymentTerms,
         ]);
@@ -121,13 +137,58 @@ class OrderController extends Controller
         });
     }
 
-    public function show(Order $order)
+    public function show(Order $order): View
     {
+        $user = auth()->user();
         $order->load(['loja', 'items.product']);
         
-        return Inertia::render('Orders/Show', [
+        $can = [
+            'approve' => $user->isAdmin() || $user->isOperador(),
+            'cancel' => $user->isAdmin() || $user->isOperador() || ($user->isLoja() && $order->loja_id === $user->id),
+        ];
+        
+        return view('orders.show', [
             'order' => $order,
+            'can' => $can,
         ]);
+    }
+
+    public function approve(Order $order)
+    {
+        if ($order->status !== 'pendente') {
+            return back()->withErrors(['status' => 'Apenas pedidos pendentes podem ser aprovados.']);
+        }
+
+        $order->update(['status' => 'aprovado']);
+        
+        NotificationService::notifyOrderApproved($order);
+        AuditService::log('update', 'order', $order->id, 'Pedido aprovado');
+
+        return back()->with('success', 'Pedido aprovado com sucesso!');
+    }
+
+    public function cancel(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'cancellation_reason' => 'required|string|max:500',
+        ]);
+
+        if ($order->status === 'cancelado') {
+            return back()->withErrors(['status' => 'Este pedido já foi cancelado.']);
+        }
+
+        $order->update([
+            'status' => 'cancelado',
+            'cancellation_reason' => $validated['cancellation_reason'],
+            'cancelled_at' => now(),
+        ]);
+
+        // Liberar crédito
+        CreditService::releaseCredit($order);
+        NotificationService::notifyOrderCancelled($order, $validated['cancellation_reason']);
+        AuditService::log('update', 'order', $order->id, 'Pedido cancelado: ' . $validated['cancellation_reason']);
+
+        return back()->with('success', 'Pedido cancelado com sucesso!');
     }
 
     public function updateStatus(Request $request, Order $order)

@@ -138,4 +138,12 @@ class User extends Authenticatable
     {
         return max(0, ($this->credit_limit ?? 0) - ($this->credit_used ?? 0));
     }
+
+    /**
+     * Accessor para available_credit (alias de credito_disponivel)
+     */
+    public function getAvailableCreditAttribute(): float
+    {
+        return $this->credito_disponivel;
+    }
 }
