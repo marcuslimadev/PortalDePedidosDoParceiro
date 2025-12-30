@@ -68,15 +68,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/{user}', [App\Http\Controllers\UserManagementController::class, 'destroy'])->name('users.destroy');
     });
 
-    // Clientes (Admin only) - CRUD completo
-    Route::middleware(CheckRole::class . ':admin')->group(function () {
-        Route::get('/clients', [App\Http\Controllers\ClientController::class, 'index'])->name('clients.index');
-        Route::get('/clients/create', [App\Http\Controllers\ClientController::class, 'create'])->name('clients.create');
-        Route::post('/clients', [App\Http\Controllers\ClientController::class, 'store'])->name('clients.store');
-        Route::get('/clients/{client}/edit', [App\Http\Controllers\ClientController::class, 'edit'])->name('clients.edit');
-        Route::put('/clients/{client}', [App\Http\Controllers\ClientController::class, 'update'])->name('clients.update');
-        Route::delete('/clients/{client}', [App\Http\Controllers\ClientController::class, 'destroy'])->name('clients.destroy');
-    });
+    // Clientes - redireciona para usuários tipo 'loja'
+    Route::get('/clients', [App\Http\Controllers\ClientController::class, 'index'])
+        ->middleware(CheckRole::class . ':admin')
+        ->name('clients.index');
 
     // Relatórios (Admin/Operador)
     Route::get('/reports', [App\Http\Controllers\ReportController::class, 'index'])
