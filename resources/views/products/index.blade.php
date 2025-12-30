@@ -8,7 +8,7 @@
 <div class="container-fluid py-4">
     <div class="row mb-3 align-items-center">
         <div class="col">
-            <h1 class="h3 fw-bold mb-1"><i class="bi bi-collection me-2"></i>Catálogo de Produtos</h1>
+            <h1 class="h3 fw-bold mb-1"><i class="bi bi-box-seam me-2"></i>Catálogo de Produtos</h1>
             <p class="text-muted small mb-0">Tabela interativa com busca, filtros e ordenação</p>
         </div>
         <div class="col-auto">
@@ -113,34 +113,50 @@ document.addEventListener('DOMContentLoaded', function() {
             url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
         },
         columnDefs: [
-            { orderable: false, targets: [0, 7] }, // Checkbox e ações não ordenáveis
+            { orderable: false, targets: [0, 7] },
         ],
         dom: '<"row mb-2"<"col-sm-12 col-md-4"l><"col-sm-12 col-md-8"f>>' +
               '<"row"<"col-sm-12"tr>>' +
               '<"row mt-2"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        drawCallback: function() {
+            // Reattach event listeners após redesenho da tabela
+            attachCheckboxListeners();
+        }
     });
 
-    // Selecionar todos
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.row-select');
-        checkboxes.forEach(cb => cb.checked = this.checked);
-        updateSelectedCount();
+    function attachCheckboxListeners() {
+        // Usar delegação de eventos para checkboxes dinâmicos
+        document.querySelectorAll('.row-select').forEach(checkbox => {
+            checkbox.removeEventListener('change', updateSelectedCount);
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+    }
+
+    // Selecionar todos usando delegação
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'selectAll') {
+            const checkboxes = document.querySelectorAll('.row-select');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            updateSelectedCount();
+        }
     });
 
-    // Atualizar contador quando selecionar individual
-    document.querySelectorAll('.row-select').forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedCount);
-    });
+    // Inicializar listeners
+    attachCheckboxListeners();
 
     function updateSelectedCount() {
         const selected = document.querySelectorAll('.row-select:checked');
         const count = selected.length;
-        document.getElementById('selectedCount').textContent = count;
-        document.getElementById('deleteSelectedBtn').style.display = count > 0 ? 'inline-block' : 'none';
+        const selectedCountEl = document.getElementById('selectedCount');
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+        
+        if (selectedCountEl) selectedCountEl.textContent = count;
+        if (deleteBtn) deleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
         
         // Atualizar checkbox "selecionar todos"
         const total = document.querySelectorAll('.row-select').length;
-        document.getElementById('selectAll').checked = count === total && count > 0;
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) selectAll.checked = count === total && count > 0;
     }
 
     window.updateSelectedCount = updateSelectedCount;
