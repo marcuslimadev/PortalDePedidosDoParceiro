@@ -20,7 +20,7 @@ class ProductController extends Controller
             $query->categoria($request->categoria);
         }
         
-        $products = $query->orderBy('descricao')->paginate(20);
+        $products = $query->orderBy('descricao')->get();
         $categorias = Product::distinct()->pluck('categoria')->filter();
         
         $can = [
