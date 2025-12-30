@@ -26,6 +26,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('products.bulkDelete');
     Route::get('/products-import', [ProductImportController::class, 'create'])->name('products.import');
     Route::post('/products-import', [ProductImportController::class, 'store'])->name('products.import.store');
+    Route::get('/products-import/download-modelo-excel', function() {
+        return response()->download(storage_path('app/public/modelo_importacao_produtos.xlsx'));
+    })->name('products.import.downloadExcel');
+    Route::get('/products-import/download-modelo-csv', function() {
+        return response()->download(storage_path('app/public/modelo_importacao_produtos.csv'));
+    })->name('products.import.downloadCsv');
 
     // Pedidos
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

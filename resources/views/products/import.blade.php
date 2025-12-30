@@ -36,32 +36,44 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h4 class="fw-bold mb-3">Importar Excel / CSV</h4>
-                <p class="text-muted">Selecione o arquivo (ex: CADASTRO 500 ITENS.xlsx) e importe o catálogo.</p>
+                <p class="text-muted">Baixe o modelo, preencha e envie para importar produtos em lote.</p>
+                
+                <div class="alert alert-primary mb-3">
+                    <h6 class="alert-heading"><i class="bi bi-download me-2"></i>Baixar Modelos de Importação</h6>
+                    <p class="mb-2 small">Preencha todos os campos, especialmente o <strong>preço</strong>!</p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('products.import.downloadExcel') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-excel me-1"></i>
+                            Baixar Modelo Excel (.xlsx)
+                        </a>
+                        <a href="{{ route('products.import.downloadCsv') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            Baixar Modelo CSV (.csv)
+                        </a>
+                    </div>
+                </div>
                 
                 <div class="alert alert-info">
-                    <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Campos Importados do Excel Winthor</h6>
+                    <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Campos do Modelo</h6>
                     <ul class="mb-0 small">
-                        <li><strong>Código:</strong> CODPROD</li>
-                        <li><strong>Descrição:</strong> DESCRICAO</li>
-                        <li><strong>Unidade:</strong> UNIDADE</li>
-                        <li><strong>Estoque:</strong> QTUNIT</li>
-                        <li><strong>Categoria:</strong> J11_CATEGORIA / J8_DESCRICAO</li>
-                        <li><strong>Marca:</strong> J9_MARCA</li>
-                        <li><strong>Embalagem:</strong> EMBALAGEM / EMBALAGEMMASTER</li>
-                        <li><strong>Peso Líquido:</strong> PESOLIQ</li>
-                        <li><strong>Peso Bruto:</strong> PESOBRUTO</li>
-                        <li><strong>Tributação:</strong> NBM</li>
+                        <li><strong>codigo:</strong> Código único do produto (obrigatório)</li>
+                        <li><strong>descricao:</strong> Nome/descrição do produto (obrigatório)</li>
+                        <li><strong>preco:</strong> Preço de venda (obrigatório) - Ex: 150.00</li>
+                        <li><strong>unidade:</strong> Unidade de medida - Ex: UN, CX, KG</li>
+                        <li><strong>tributacao:</strong> Código de tributação - Ex: T01</li>
+                        <li><strong>estoque:</strong> Quantidade em estoque - Ex: 100</li>
+                        <li><strong>categoria:</strong> Categoria do produto - Ex: Premium</li>
+                        <li><strong>marca:</strong> Marca do produto (opcional)</li>
+                        <li><strong>embalagem:</strong> Tipo de embalagem (opcional)</li>
+                        <li><strong>peso_liquido:</strong> Peso líquido em kg (opcional)</li>
+                        <li><strong>peso_bruto:</strong> Peso bruto em kg (opcional)</li>
                     </ul>
-                </div>
-
-                <div class="alert alert-warning">
-                    <strong><i class="bi bi-exclamation-triangle me-2"></i>Atenção:</strong> O arquivo Excel não contém preços. Após a importação, você deverá definir os preços manualmente ou importar uma tabela de preços separada.
                 </div>
 
                 <form method="POST" action="{{ route('products.import.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Arquivo</label>
+                        <label class="form-label fw-semibold">Arquivo Preenchido</label>
                         <input type="file" name="file" class="form-control" accept=".xlsx,.csv,.txt" required>
                         <small class="text-muted">Formatos suportados: .xlsx, .csv</small>
                     </div>

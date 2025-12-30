@@ -96,18 +96,18 @@ class ProductImportController extends Controller
         };
 
         return [
-            'codigo'        => $get('codprod') ?? $get('codigo') ?? $get('cod_prod') ?? $get('codigo_produto'),
+            'codigo'        => $get('codigo') ?? $get('codprod') ?? $get('cod_prod') ?? $get('codigo_produto'),
             'descricao'     => $get('descricao') ?? $get('descrição') ?? $get('produto') ?? $get('descricao_produto'),
-            'preco'         => $decimal($get('preco') ?? $get('preço') ?? $get('valor') ?? $get('preco_venda') ?? $get('pvenda'), null),
+            'preco'         => $decimal($get('preco') ?? $get('preço') ?? $get('valor') ?? $get('preco_venda') ?? $get('pvenda')),
             'unidade'       => $get('unidade') ?? $get('un') ?? $get('unidadedemedida') ?? 'UN',
             'tributacao'    => $get('tributacao') ?? $get('tributação') ?? $get('nbm') ?? 'T',
             'estoque'       => $int($get('estoque') ?? $get('qtd') ?? $get('quantidade') ?? $get('qtunit')),
-            'categoria'     => $get('j13_categoria') ?? $get('j11_categoria') ?? $get('categoria') ?? $get('grupo') ?? $get('j8_descricao'),
+            'categoria'     => $get('categoria') ?? $get('j13_categoria') ?? $get('j11_categoria') ?? $get('grupo') ?? $get('j8_descricao'),
             'codprod_winthor' => $get('codprod') ?? $get('codprod_winthor') ?? $get('winthor') ?? $get('cod_winthor'),
             'embalagem'     => $get('embalagem') ?? $get('embalagemmaster') ?? $get('pack') ?? $get('emb'),
-            'marca'         => $get('j9_marca') ?? $get('marca') ?? $get('fabricante'),
-            'peso_liquido'  => $decimal($get('pesoliq') ?? $get('peso_liquido') ?? $get('peso_liq') ?? $get('pesoliq')),
-            'peso_bruto'    => $decimal($get('pesobruto') ?? $get('peso_bruto') ?? $get('peso_brt') ?? $get('pesobrt')),
+            'marca'         => $get('marca') ?? $get('j9_marca') ?? $get('fabricante'),
+            'peso_liquido'  => $decimal($get('peso_liquido') ?? $get('pesoliq') ?? $get('peso_liq')),
+            'peso_bruto'    => $decimal($get('peso_bruto') ?? $get('pesobruto') ?? $get('peso_brt')),
             'ncm'           => $get('ncm') ?? $get('codigo_ncm'),
         ];
     }
