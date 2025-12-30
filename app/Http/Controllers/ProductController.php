@@ -43,5 +43,30 @@ class ProductController extends Controller
             'product' => $product,
         ]);
     }
+
+    public function bulkDelete(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Você não tem permissão para excluir produtos'
+            ], 403);
+        }
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:products,id'
+        ]);
+
+        $deleted = Product::whereIn('id', $request->ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted,
+            'message' => "$deleted produto(s) excluído(s) com sucesso!"
+        ]);
+    }
 }
 

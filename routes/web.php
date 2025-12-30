@@ -21,6 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Produtos
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])
+        ->middleware(CheckRole::class . ':admin')
+        ->name('products.bulkDelete');
     Route::get('/products-import', [ProductImportController::class, 'create'])->name('products.import');
     Route::post('/products-import', [ProductImportController::class, 'store'])->name('products.import.store');
 
