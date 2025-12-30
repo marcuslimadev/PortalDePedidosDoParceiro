@@ -5,13 +5,13 @@
 @section('content')
 <link href="https://cdn.datatables.net/v/bs5/dt-2.0.8/datatables.min.css" rel="stylesheet">
 
-<div class="container-fluid py-4">
-    <div class="row mb-3 align-items-center">
-        <div class="col">
-            <h1 class="h3 fw-bold mb-1"><i class="bi bi-box-seam me-2"></i>Catálogo de Produtos</h1>
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-1 fw-bold">Catálogo de Produtos</h4>
             <p class="text-muted small mb-0">Tabela interativa com busca, filtros e ordenação</p>
         </div>
-        <div class="col-auto">
+        <div>
             <button id="deleteSelectedBtn" class="btn btn-danger me-2" style="display: none;" onclick="deleteSelected()">
                 <i class="bi bi-trash me-1"></i>
                 Excluir Selecionados (<span id="selectedCount">0</span>)
