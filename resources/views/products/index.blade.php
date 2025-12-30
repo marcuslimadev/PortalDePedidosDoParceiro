@@ -3,6 +3,8 @@
 @section('title', 'Produtos')
 
 @section('content')
+<link href="https://cdn.datatables.net/v/bs5/dt-2.0.8/datatables.min.css" rel="stylesheet">
+
 <div class="min-vh-100 bg-light">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
@@ -50,129 +52,169 @@
     <div class="container-fluid py-4">
         <div class="row mb-4">
             <div class="col">
-                <h1 class="h3 fw-bold">Catálogo de Produtos</h1>
-                <p class="text-muted">Navegue pelos produtos disponíveis</p>
+                <h1 class="h3 fw-bold"><i class="bi bi-collection me-2"></i>Catálogo de Produtos</h1>
+                <p class="text-muted">Tabela interativa com busca, filtros e ordenação</p>
             </div>
             <div class="col-auto">
-                <a href="{{ route('products.import') }}" class="btn btn-outline-primary">
+                <a href="{{ route('products.import') }}" class="btn btn-primary">
                     <i class="bi bi-upload me-1"></i>
                     Importar Excel/CSV
                 </a>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="card border-0 shadow-sm mb-4">
+        <!-- Products DataTable -->
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <form method="GET" action="{{ route('products.index') }}" class="row g-3">
-                    <div class="col-md-5">
-                        <label class="form-label fw-semibold">Buscar</label>
-                        <input 
-                            type="text" 
-                            name="search" 
-                            class="form-control" 
-                            placeholder="Código ou descrição do produto..."
-                            value="{{ $filters['search'] ?? '' }}"
-                        >
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Categoria</label>
-                        <select name="categoria" class="form-select">
-                            <option value="">Todas as categorias</option>
-                            @foreach($categorias as $categoria)
-                                <option value="{{ $categoria }}" {{ ($filters['categoria'] ?? '') == $categoria ? 'selected' : '' }}>
-                                    {{ $categoria }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i>
-                            Buscar
-                        </button>
-                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-1"></i>
-                            Limpar
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="row g-4">
-            @forelse($products as $product)
-            <div class="col-md-6 col-lg-4 col-xl-3">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-primary">{{ $product->codigo }}</span>
-                            @if($product->estoque > 0)
-                                <span class="badge bg-success">Em estoque</span>
-                            @else
-                                <span class="badge bg-danger">Esgotado</span>
-                            @endif
-                        </div>
-                        
-                        <h5 class="card-title mb-2">{{ $product->descricao }}</h5>
-                        
-                        @if($product->categoria)
-                            <p class="text-muted small mb-2">
-                                <i class="bi bi-tag me-1"></i>
-                                {{ $product->categoria }}
-                            </p>
-                        @endif
-                        
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div>
-                                <p class="mb-0 text-muted small">Preço</p>
-                                <h4 class="mb-0 text-primary">R$ {{ number_format($product->preco, 2, ',', '.') }}</h4>
-                            </div>
-                            <div class="text-end">
-                                <p class="mb-0 text-muted small">Estoque</p>
-                                <p class="mb-0 fw-bold">{{ number_format($product->estoque, 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-3">
-                            <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-primary w-100">
-                                <i class="bi bi-eye me-1"></i>
-                                Ver Detalhes
-                            </a>
-                        </div>
-                    </div>
+                <div class="table-responsive">
+                    <table id="productsTable" class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 8%;">Código</th>
+                                <th style="width: 28%;">Descrição</th>
+                                <th style="width: 15%;">Categoria</th>
+                                <th style="width: 12%;">Preço</th>
+                                <th style="width: 12%;">Estoque</th>
+                                <th style="width: 10%;">Status</th>
+                                <th style="width: 15%; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($products as $product)
+                            <tr class="align-middle">
+                                <td>
+                                    <span class="badge bg-primary text-light">{{ $product->codigo }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ $product->descricao }}</div>
+                                    <small class="text-muted">{{ Str::limit($product->descricao, 40) }}</small>
+                                </td>
+                                <td>
+                                    @if($product->categoria)
+                                        <span class="badge bg-info">{{ $product->categoria }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">R$ {{ number_format($product->preco, 2, ',', '.') }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 20px; width: 100px;" role="progressbar">
+                                            @php
+                                                $percentage = min(($product->estoque / 1000) * 100, 100);
+                                                $barColor = $product->estoque > 500 ? 'success' : ($product->estoque > 100 ? 'warning' : 'danger');
+                                            @endphp
+                                            <div class="progress-bar bg-{{ $barColor }}" style="width: {{ $percentage }}%"></div>
+                                        </div>
+                                        <span class="fw-bold" style="min-width: 60px;">{{ number_format($product->estoque, 0, ',', '.') }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if($product->estoque > 0)
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Em estoque</span>
+                                    @else
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>Esgotado</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ route('products.show', $product) }}" class="btn btn-outline-primary" title="Ver detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-success" onclick="addToCart({{ $product->id }})" title="Adicionar ao pedido">
+                                            <i class="bi bi-bag-plus"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
+                                    <h5 class="text-muted">Nenhum produto encontrado</h5>
+                                    <p class="text-muted">Tente ajustar os filtros de busca ou importe um novo catálogo</p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            @empty
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <h4 class="mt-3">Nenhum produto encontrado</h4>
-                        <p class="text-muted">Tente ajustar os filtros de busca</p>
-                    </div>
-                </div>
-            </div>
-            @endforelse
         </div>
-
-        <!-- Pagination -->
-        @if($products->hasPages())
-        <div class="d-flex justify-content-center mt-4">
-            {{ $products->links() }}
-        </div>
-        @endif
     </div>
 </div>
 
+<script src="https://cdn.datatables.net/v/bs5/dt-2.0.8/datatables.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = new DataTable('#productsTable', {
+        responsive: true,
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+        },
+        columnDefs: [
+            { orderable: false, targets: [6] }, // Desabilita ordenação na coluna de ações
+        ],
+        dom: '<"row mb-3"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+              '<"row"<"col-sm-12"tr>>' +
+              '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+    });
+
+    // Estilo das caixas de busca e quantidade
+    const style = document.createElement('style');
+    style.textContent = `
+        #productsTable_filter input {
+            border-radius: 0.375rem;
+        }
+        #productsTable_length select {
+            border-radius: 0.375rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 0.375rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background-color: #0d6efd;
+            color: white !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #0d6efd;
+            color: white !important;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+function addToCart(productId) {
+    alert('Funcionalidade em desenvolvimento: Adicionar produto #' + productId + ' ao pedido');
+    // Será implementado com HTMX
+}
+</script>
+
 <style>
-.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.15)!important;
-}
+    #productsTable thead {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    #productsTable tbody tr {
+        transition: background-color 0.2s ease;
+    }
+    
+    #productsTable tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .dataTables_wrapper {
+        font-size: 0.95rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.85rem;
+    }
 </style>
 @endsection
