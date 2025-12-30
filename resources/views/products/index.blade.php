@@ -104,8 +104,13 @@
 
 <script src="https://cdn.datatables.net/v/bs5/dt-2.0.8/datatables.min.js"></script>
 <script>
+let dataTable;
+
 document.addEventListener('DOMContentLoaded', function() {
-    const table = new DataTable('#productsTable', {
+    console.log('Inicializando DataTable e eventos...');
+    
+    // Inicializar DataTable
+    dataTable = new DataTable('#productsTable', {
         responsive: true,
         pageLength: 50,
         lengthMenu: [[25, 50, 100, 250, -1], [25, 50, 100, 250, 'Todos']],
@@ -119,51 +124,82 @@ document.addEventListener('DOMContentLoaded', function() {
               '<"row"<"col-sm-12"tr>>' +
               '<"row mt-2"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         drawCallback: function() {
-            // Reattach event listeners após redesenho da tabela
+            console.log('Tabela redesenhada, reattachando listeners');
             attachCheckboxListeners();
         }
     });
 
-    function attachCheckboxListeners() {
-        // Usar delegação de eventos para checkboxes dinâmicos
-        document.querySelectorAll('.row-select').forEach(checkbox => {
-            checkbox.removeEventListener('change', updateSelectedCount);
-            checkbox.addEventListener('change', updateSelectedCount);
-        });
-    }
-
-    // Selecionar todos usando delegação
-    document.addEventListener('change', function(e) {
-        if (e.target && e.target.id === 'selectAll') {
+    // Event listener para "Selecionar Todos"
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function(e) {
+            console.log('Select All clicked:', this.checked);
             const checkboxes = document.querySelectorAll('.row-select');
-            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            console.log('Total checkboxes encontrados:', checkboxes.length);
+            checkboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
             updateSelectedCount();
-        }
-    });
-
-    // Inicializar listeners
-    attachCheckboxListeners();
-
-    function updateSelectedCount() {
-        const selected = document.querySelectorAll('.row-select:checked');
-        const count = selected.length;
-        const selectedCountEl = document.getElementById('selectedCount');
-        const deleteBtn = document.getElementById('deleteSelectedBtn');
-        
-        if (selectedCountEl) selectedCountEl.textContent = count;
-        if (deleteBtn) deleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
-        
-        // Atualizar checkbox "selecionar todos"
-        const total = document.querySelectorAll('.row-select').length;
-        const selectAll = document.getElementById('selectAll');
-        if (selectAll) selectAll.checked = count === total && count > 0;
+        });
+        console.log('Listener do selectAll anexado');
+    } else {
+        console.error('Checkbox selectAll não encontrado!');
     }
 
-    window.updateSelectedCount = updateSelectedCount;
+    // Anexar listeners iniciais
+    setTimeout(() => {
+        attachCheckboxListeners();
+        console.log('Listeners iniciais anexados');
+    }, 100);
 });
+
+function attachCheckboxListeners() {
+    const checkboxes = document.querySelectorAll('.row-select');
+    console.log('Anexando listeners a', checkboxes.length, 'checkboxes');
+    
+    checkboxes.forEach((checkbox, index) => {
+        // Remove listener antigo se existir
+        checkbox.removeEventListener('change', handleCheckboxChange);
+        // Adiciona novo listener
+        checkbox.addEventListener('change', handleCheckboxChange);
+    });
+}
+
+function handleCheckboxChange() {
+    console.log('Checkbox alterado');
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.row-select:checked');
+    const count = selected.length;
+    
+    console.log('Atualizando contador:', count, 'selecionados');
+    
+    const selectedCountEl = document.getElementById('selectedCount');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    
+    if (selectedCountEl) {
+        selectedCountEl.textContent = count;
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        console.log('Botão excluir:', count > 0 ? 'visível' : 'oculto');
+    }
+    
+    // Atualizar estado do checkbox "selecionar todos"
+    const total = document.querySelectorAll('.row-select').length;
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll && total > 0) {
+        selectAll.checked = count === total;
+        selectAll.indeterminate = count > 0 && count < total;
+    }
+}
 
 function deleteSelected() {
     const selected = Array.from(document.querySelectorAll('.row-select:checked'));
+    
     if (selected.length === 0) {
         alert('Selecione ao menos um produto para excluir');
         return;
@@ -173,9 +209,26 @@ function deleteSelected() {
     const codigos = selected.map(cb => cb.dataset.codigo).join(', ');
     
     if (confirm(`Deseja realmente excluir ${selected.length} produto(s)?\n\nCódigos: ${codigos}`)) {
-        // TODO: Implementar exclusão em lote via AJAX
         console.log('IDs para excluir:', ids);
-        alert('Funcionalidade de exclusão em desenvolvimento');
+        
+        // TODO: Implementar exclusão via AJAX
+        fetch('/products/bulk-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ ids: ids })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(`${data.deleted} produto(s) excluído(s) com sucesso!`);
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Erro ao excluir:', error);
+            alert('Erro ao excluir produtos. Tente novamente.');
+        });
     }
 }
 
