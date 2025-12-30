@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
         pageLength: 50,
         lengthMenu: [[25, 50, 100, 250, -1], [25, 50, 100, 250, 'Todos']],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
         },
         columnDefs: [
             { orderable: false, targets: [0, 7] },
