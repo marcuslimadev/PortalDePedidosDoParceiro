@@ -23,6 +23,9 @@ class Product extends Model
         'peso_liquido',
         'peso_bruto',
         'ncm',
+        'nbm',
+        'ean_produto',
+        'ean_embalagem',
     ];
 
     protected $casts = [

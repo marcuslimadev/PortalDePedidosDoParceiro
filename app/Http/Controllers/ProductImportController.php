@@ -100,7 +100,7 @@ class ProductImportController extends Controller
             'descricao'     => $get('descricao') ?? $get('descrição') ?? $get('produto') ?? $get('descricao_produto'),
             'preco'         => $decimal($get('preco') ?? $get('preço') ?? $get('valor') ?? $get('preco_venda') ?? $get('pvenda')),
             'unidade'       => $get('unidade') ?? $get('un') ?? $get('unidadedemedida') ?? 'UN',
-            'tributacao'    => $get('tributacao') ?? $get('tributação') ?? $get('nbm') ?? 'T',
+            'tributacao'    => $get('tributacao') ?? $get('tributação') ?? 'T',
             'estoque'       => $int($get('estoque') ?? $get('qtd') ?? $get('quantidade') ?? $get('qtunit')),
             'categoria'     => $get('categoria') ?? $get('j13_categoria') ?? $get('j11_categoria') ?? $get('grupo') ?? $get('j8_descricao'),
             'codprod_winthor' => $get('codprod') ?? $get('codprod_winthor') ?? $get('winthor') ?? $get('cod_winthor'),
@@ -109,6 +109,9 @@ class ProductImportController extends Controller
             'peso_liquido'  => $decimal($get('peso_liquido') ?? $get('pesoliq') ?? $get('peso_liq')),
             'peso_bruto'    => $decimal($get('peso_bruto') ?? $get('pesobruto') ?? $get('peso_brt')),
             'ncm'           => $get('ncm') ?? $get('codigo_ncm'),
+            'nbm'           => $get('nbm') ?? $get('codigo_nbm'),
+            'ean_produto'   => $get('ean_produto') ?? $get('ean') ?? $get('codigo_barras') ?? $get('gtin'),
+            'ean_embalagem' => $get('ean_embalagem') ?? $get('ean_master') ?? $get('ean_caixa') ?? $get('gtin_embalagem'),
         ];
     }
 }

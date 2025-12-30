@@ -67,6 +67,9 @@
                         <li><strong>embalagem:</strong> Tipo de embalagem (opcional)</li>
                         <li><strong>peso_liquido:</strong> Peso líquido em kg (opcional)</li>
                         <li><strong>peso_bruto:</strong> Peso bruto em kg (opcional)</li>
+                        <li><strong>nbm:</strong> Nomenclatura Brasileira de Mercadorias (opcional)</li>
+                        <li><strong>ean_produto:</strong> Código de barras do produto (opcional)</li>
+                        <li><strong>ean_embalagem:</strong> Código de barras da embalagem (opcional)</li>
                     </ul>
                 </div>
 

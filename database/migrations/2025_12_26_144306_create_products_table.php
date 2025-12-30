@@ -28,6 +28,9 @@ return new class extends Migration
             $table->decimal('peso_liquido', 10, 3)->nullable();
             $table->decimal('peso_bruto', 10, 3)->nullable();
             $table->string('ncm', 20)->nullable();
+            $table->string('nbm', 20)->nullable();
+            $table->string('ean_produto', 50)->nullable();
+            $table->string('ean_embalagem', 50)->nullable();
             
             $table->timestamps();
             

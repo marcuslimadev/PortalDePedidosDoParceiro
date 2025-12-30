@@ -21,6 +21,9 @@ $writer->addRows([
         'embalagem' => '1UNX490ML',
         'peso_liquido' => 0.49,
         'peso_bruto' => 0.494,
+        'nbm' => '22021000',
+        'ean_produto' => '7891234567890',
+        'ean_embalagem' => '17891234567897',
     ],
     [
         'codigo' => 'PROD002',
@@ -34,6 +37,9 @@ $writer->addRows([
         'embalagem' => '12X490ML',
         'peso_liquido' => 0.49,
         'peso_bruto' => 0.494,
+        'nbm' => '22021000',
+        'ean_produto' => '7899876543210',
+        'ean_embalagem' => '17899876543217',
     ],
     [
         'codigo' => 'PROD003',
@@ -47,6 +53,9 @@ $writer->addRows([
         'embalagem' => '24X250ML',
         'peso_liquido' => 0.25,
         'peso_bruto' => 0.260,
+        'nbm' => '22030000',
+        'ean_produto' => '7895551112222',
+        'ean_embalagem' => '17895551112229',
     ],
 ]);
 
