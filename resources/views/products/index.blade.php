@@ -251,14 +251,14 @@ function addToCart(productId) {
     #productsTable thead th {
         background-color: #f8f9fa;
         border-bottom: 2px solid #dee2e6;
-        padding: 0.5rem 0.75rem;
+        padding: 2px;
         font-weight: 600;
         color: #495057;
         white-space: nowrap;
     }
     
     #productsTable tbody td {
-        padding: 0.4rem 0.75rem;
+        padding: 2px;
         vertical-align: middle;
         border-bottom: 1px solid #e9ecef;
     }
