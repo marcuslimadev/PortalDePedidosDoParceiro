@@ -52,14 +52,21 @@ class OrderController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $products = Product::orderBy('descricao')->get();
         $paymentTerms = PaymentService::getAvailableTerms();
         
+        // Produto pré-selecionado via query string
+        $preselectedProduct = null;
+        if ($request->has('product')) {
+            $preselectedProduct = Product::find($request->product);
+        }
+        
         return view('orders.create', [
             'products' => $products,
             'paymentTerms' => $paymentTerms,
+            'preselectedProduct' => $preselectedProduct,
         ]);
     }
 

@@ -274,6 +274,16 @@ $(document).ready(function() {
         );
         $(this).val(null).trigger('change');
     });
+    
+    // Produto pré-selecionado via URL
+    @if(isset($preselectedProduct))
+        addToCart(
+            {{ $preselectedProduct->id }},
+            '{{ $preselectedProduct->codigo }}',
+            '{{ addslashes($preselectedProduct->descricao) }}',
+            {{ $preselectedProduct->preco }}
+        );
+    @endif
 });
 
 function addToCart(id, codigo, descricao, preco) {

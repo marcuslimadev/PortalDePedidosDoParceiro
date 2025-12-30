@@ -238,7 +238,8 @@ function viewProduct(productId) {
 }
 
 function addToCart(productId) {
-    alert('Funcionalidade em desenvolvimento: Adicionar produto #' + productId + ' ao pedido');
+    // Redireciona para a tela de criação de pedido com o produto pré-selecionado
+    window.location.href = '/orders/create?product=' + productId;
 }
 </script>
 
