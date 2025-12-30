@@ -163,7 +163,10 @@ class OrderController extends Controller
     public function approve(Order $order)
     {
         if ($order->status !== 'pendente') {
-            return back()->withErrors(['status' => 'Apenas pedidos pendentes podem ser aprovados.']);
+            return response()->json([
+                'success' => false,
+                'message' => 'Apenas pedidos pendentes podem ser aprovados.'
+            ], 400);
         }
 
         $order->update(['status' => 'aprovado']);
@@ -171,7 +174,10 @@ class OrderController extends Controller
         NotificationService::notifyOrderApproved($order);
         AuditService::log('update', 'order', $order->id, 'Pedido aprovado');
 
-        return back()->with('success', 'Pedido aprovado com sucesso!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Pedido aprovado com sucesso!'
+        ]);
     }
 
     public function cancel(Request $request, Order $order)
@@ -181,7 +187,10 @@ class OrderController extends Controller
         ]);
 
         if ($order->status === 'cancelado') {
-            return back()->withErrors(['status' => 'Este pedido já foi cancelado.']);
+            return response()->json([
+                'success' => false,
+                'message' => 'Este pedido já foi cancelado.'
+            ], 400);
         }
 
         $order->update([
@@ -195,7 +204,10 @@ class OrderController extends Controller
         NotificationService::notifyOrderCancelled($order, $validated['cancellation_reason']);
         AuditService::log('update', 'order', $order->id, 'Pedido cancelado: ' . $validated['cancellation_reason']);
 
-        return back()->with('success', 'Pedido cancelado com sucesso!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Pedido cancelado com sucesso!'
+        ]);
     }
 
     public function updateStatus(Request $request, Order $order)
