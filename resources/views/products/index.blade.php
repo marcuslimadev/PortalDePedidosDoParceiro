@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar DataTable
     dataTable = new DataTable('#productsTable', {
         responsive: true,
-        pageLength: 50,
+        pageLength: -1,
         lengthMenu: [[25, 50, 100, 250, -1], [25, 50, 100, 250, 'Todos']],
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
