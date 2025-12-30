@@ -58,6 +58,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
 
+    // Usuários (Admin only)
+    Route::middleware(CheckRole::class . ':admin')->group(function () {
+        Route::get('/users', [App\Http\Controllers\UserManagementController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [App\Http\Controllers\UserManagementController::class, 'create'])->name('users.create');
+        Route::post('/users', [App\Http\Controllers\UserManagementController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}/edit', [App\Http\Controllers\UserManagementController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [App\Http\Controllers\UserManagementController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [App\Http\Controllers\UserManagementController::class, 'destroy'])->name('users.destroy');
+    });
+
+    // Clientes (Admin only)
+    Route::get('/clients', [App\Http\Controllers\ClientController::class, 'index'])
+        ->middleware(CheckRole::class . ':admin')
+        ->name('clients.index');
+
+    // Relatórios (Admin/Operador)
+    Route::get('/reports', [App\Http\Controllers\ReportController::class, 'index'])
+        ->middleware(CheckRole::class . ':admin,operador')
+        ->name('reports.index');
+
+    // Configurações (Admin only)
+    Route::get('/settings', [App\Http\Controllers\SettingsController::class, 'index'])
+        ->middleware(CheckRole::class . ':admin')
+        ->name('settings.index');
+    Route::post('/settings', [App\Http\Controllers\SettingsController::class, 'update'])
+        ->middleware(CheckRole::class . ':admin')
+        ->name('settings.update');
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

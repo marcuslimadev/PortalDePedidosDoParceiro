@@ -150,7 +150,7 @@
                     <div class="sidebar-heading">Administração</div>
                     
                     <li class="sidebar-nav-item">
-                        <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Usuários'); return false;"
+                        <a href="{{ route('users.index') }}" class="sidebar-nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
                            data-bs-toggle="tooltip" title="Gerenciar usuários do sistema">
                             <i class="bi bi-people"></i>
                             <span>Usuários</span>
@@ -158,7 +158,7 @@
                     </li>
                     
                     <li class="sidebar-nav-item">
-                        <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Clientes'); return false;"
+                        <a href="{{ route('clients.index') }}" class="sidebar-nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}"
                            data-bs-toggle="tooltip" title="Cadastro e gestão de clientes">
                             <i class="bi bi-building"></i>
                             <span>Clientes</span>
@@ -166,7 +166,7 @@
                     </li>
                     
                     <li class="sidebar-nav-item">
-                        <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Relatórios'); return false;"
+                        <a href="{{ route('reports.index') }}" class="sidebar-nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                            data-bs-toggle="tooltip" title="Relatórios gerenciais e estatísticas">
                             <i class="bi bi-graph-up"></i>
                             <span>Relatórios</span>
@@ -186,13 +186,15 @@
                     </a>
                 </li>
                 
+                @if(Auth::user()->role === 'admin')
                 <li class="sidebar-nav-item">
-                    <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Configurações'); return false;"
+                    <a href="{{ route('settings.index') }}" class="sidebar-nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}"
                        data-bs-toggle="tooltip" title="Configurações do sistema">
                         <i class="bi bi-gear"></i>
                         <span>Configurações</span>
                     </a>
                 </li>
+                @endif
                 
                 <li class="sidebar-nav-item">
                     <form method="POST" action="{{ route('logout') }}" id="logoutForm">
@@ -224,34 +226,6 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
-        
-        // Toast global para funcionalidades em desenvolvimento
-        function showComingSoon(feature) {
-            const toastHtml = `
-                <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
-                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="toast-header bg-info text-white">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong class="me-auto">Em Breve</strong>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                        </div>
-                        <div class="toast-body">
-                            A funcionalidade <strong>${feature}</strong> está em desenvolvimento e estará disponível em breve.
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', toastHtml);
-            
-            setTimeout(() => {
-                const toasts = document.querySelectorAll('.toast');
-                toasts.forEach(toast => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.parentElement.remove(), 300);
-                });
-            }, 3500);
-        }
     </script>
 </body>
 </html>
