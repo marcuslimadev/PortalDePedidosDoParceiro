@@ -424,8 +424,8 @@ function proceedToCheckout() {
     });
     $('#cartItemsInputs').html(inputsHtml);
     
-    // Abrir modal
-    new bootstrap.Modal(document.getElementById('checkoutModal')).show();
+    // Abrir modal usando jQuery/Bootstrap
+    $('#checkoutModal').modal('show');
 }
 </script>
 @endsection
