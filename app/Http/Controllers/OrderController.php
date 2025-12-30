@@ -54,7 +54,7 @@ class OrderController extends Controller
 
     public function create(): View
     {
-        $products = Product::emEstoque()->get();
+        $products = Product::orderBy('descricao')->get();
         $paymentTerms = PaymentService::getAvailableTerms();
         
         return view('orders.create', [
