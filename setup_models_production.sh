@@ -2,13 +2,19 @@
 
 # Script para enviar arquivos modelo para produção via Git
 # Execute no servidor após pull
+# Servidor: us-phx-web1005 - usar comando 'php' direto
 
 echo "📦 Configurando modelos de importação em produção..."
 
 # Garantir que o diretório existe
 mkdir -p storage/app/public
 
+# Executar migrations pendentes
+echo "🔧 Executando migrations..."
+php artisan migrate --force
+
 # Executar script de criação dos modelos
+echo "📝 Criando modelos..."
 php create_excel_template.php
 
 echo "✅ Modelos criados com sucesso!"
