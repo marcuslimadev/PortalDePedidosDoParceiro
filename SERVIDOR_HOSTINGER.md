@@ -5,7 +5,8 @@
 - **Servidor:** us-phx-web1005
 - **Usuário:** u815655858
 - **Path SSH:** /home/u815655858/domains/darkred-wombat-992258.hostingersite.com/public_html
-- **PHP:** Usar comando `php` direto (não existe `php83` no PATH)
+- **PHP 8.3:** /opt/alt/php83/usr/bin/php
+- **PHP padrão CLI:** /usr/bin/php (versão 8.0.30 - NÃO USAR)
 
 ## Comandos para Deploy
 
@@ -17,14 +18,14 @@ git pull
 
 ### 2. Executar migrations
 ```bash
-php artisan migrate
+/opt/alt/php83/usr/bin/php artisan migrate
 ```
 
 ### 3. Limpar cache
 ```bash
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
+/opt/alt/php83/usr/bin/php artisan config:clear
+/opt/alt/php83/usr/bin/php artisan cache:clear
+/opt/alt/php83/usr/bin/php artisan view:clear
 ```
 
 ### 4. Verificar versão do PHP
