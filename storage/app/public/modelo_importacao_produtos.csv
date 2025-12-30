@@ -1,0 +1,4 @@
+codigo,descricao,preco,unidade,tributacao,estoque,categoria,marca,embalagem,peso_liquido,peso_bruto
+PROD001,Produto Exemplo 1,150.00,UN,T01,100,Premium,Marca A,1UNX490ML,0.49,0.494
+PROD002,Produto Exemplo 2,85.50,UN,T01,250,Standard,Marca B,12X490ML,0.49,0.494
+PROD003,Produto Exemplo 3,45.00,CX,T02,500,Economy,Marca C,24X250ML,0.25,0.260
