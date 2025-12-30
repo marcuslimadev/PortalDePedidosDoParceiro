@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('codigo', 50)->unique();
             $table->text('descricao');
-            $table->decimal('preco', 12, 2);
+            $table->decimal('preco', 12, 2)->nullable();
             $table->string('unidade', 10);
             $table->string('tributacao', 50);
             $table->integer('estoque')->default(0);

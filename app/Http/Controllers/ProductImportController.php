@@ -96,18 +96,18 @@ class ProductImportController extends Controller
         };
 
         return [
-            'codigo'        => $get('codigo') ?? $get('cod_prod') ?? $get('codprod') ?? $get('codigo_produto'),
+            'codigo'        => $get('codprod') ?? $get('codigo') ?? $get('cod_prod') ?? $get('codigo_produto'),
             'descricao'     => $get('descricao') ?? $get('descrição') ?? $get('produto') ?? $get('descricao_produto'),
-            'preco'         => $decimal($get('preco') ?? $get('preço') ?? $get('valor') ?? $get('preco_venda') ?? $get('pvenda'), 0.01),
+            'preco'         => $decimal($get('preco') ?? $get('preço') ?? $get('valor') ?? $get('preco_venda') ?? $get('pvenda'), null),
             'unidade'       => $get('unidade') ?? $get('un') ?? $get('unidadedemedida') ?? 'UN',
-            'tributacao'    => $get('tributacao') ?? $get('tributação') ?? 'T',
-            'estoque'       => $int($get('estoque') ?? $get('qtd') ?? $get('quantidade')),
-            'categoria'     => $get('categoria') ?? $get('grupo') ?? $get('linha'),
-            'codprod_winthor' => $get('codprod_winthor') ?? $get('winthor') ?? $get('cod_winthor'),
-            'embalagem'     => $get('embalagem') ?? $get('pack') ?? $get('emb'),
-            'marca'         => $get('marca') ?? $get('fabricante'),
-            'peso_liquido'  => $decimal($get('peso_liquido') ?? $get('peso_liq') ?? $get('pesoliq')),
-            'peso_bruto'    => $decimal($get('peso_bruto') ?? $get('peso_brt') ?? $get('pesobrt')),
+            'tributacao'    => $get('tributacao') ?? $get('tributação') ?? $get('nbm') ?? 'T',
+            'estoque'       => $int($get('estoque') ?? $get('qtd') ?? $get('quantidade') ?? $get('qtunit')),
+            'categoria'     => $get('j13_categoria') ?? $get('j11_categoria') ?? $get('categoria') ?? $get('grupo') ?? $get('j8_descricao'),
+            'codprod_winthor' => $get('codprod') ?? $get('codprod_winthor') ?? $get('winthor') ?? $get('cod_winthor'),
+            'embalagem'     => $get('embalagem') ?? $get('embalagemmaster') ?? $get('pack') ?? $get('emb'),
+            'marca'         => $get('j9_marca') ?? $get('marca') ?? $get('fabricante'),
+            'peso_liquido'  => $decimal($get('pesoliq') ?? $get('peso_liquido') ?? $get('peso_liq') ?? $get('pesoliq')),
+            'peso_bruto'    => $decimal($get('pesobruto') ?? $get('peso_bruto') ?? $get('peso_brt') ?? $get('pesobrt')),
             'ncm'           => $get('ncm') ?? $get('codigo_ncm'),
         ];
     }

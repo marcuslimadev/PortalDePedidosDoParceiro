@@ -37,6 +37,27 @@
             <div class="card-body">
                 <h4 class="fw-bold mb-3">Importar Excel / CSV</h4>
                 <p class="text-muted">Selecione o arquivo (ex: CADASTRO 500 ITENS.xlsx) e importe o catálogo.</p>
+                
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Campos Importados do Excel Winthor</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Código:</strong> CODPROD</li>
+                        <li><strong>Descrição:</strong> DESCRICAO</li>
+                        <li><strong>Unidade:</strong> UNIDADE</li>
+                        <li><strong>Estoque:</strong> QTUNIT</li>
+                        <li><strong>Categoria:</strong> J11_CATEGORIA / J8_DESCRICAO</li>
+                        <li><strong>Marca:</strong> J9_MARCA</li>
+                        <li><strong>Embalagem:</strong> EMBALAGEM / EMBALAGEMMASTER</li>
+                        <li><strong>Peso Líquido:</strong> PESOLIQ</li>
+                        <li><strong>Peso Bruto:</strong> PESOBRUTO</li>
+                        <li><strong>Tributação:</strong> NBM</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong><i class="bi bi-exclamation-triangle me-2"></i>Atenção:</strong> O arquivo Excel não contém preços. Após a importação, você deverá definir os preços manualmente ou importar uma tabela de preços separada.
+                </div>
+
                 <form method="POST" action="{{ route('products.import.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
