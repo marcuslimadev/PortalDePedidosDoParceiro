@@ -150,21 +150,24 @@
                     <div class="sidebar-heading">Administração</div>
                     
                     <li class="sidebar-nav-item">
-                        <a href="#" class="sidebar-nav-link">
+                        <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Usuários'); return false;"
+                           data-bs-toggle="tooltip" title="Gerenciar usuários do sistema">
                             <i class="bi bi-people"></i>
                             <span>Usuários</span>
                         </a>
                     </li>
                     
                     <li class="sidebar-nav-item">
-                        <a href="#" class="sidebar-nav-link">
+                        <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Clientes'); return false;"
+                           data-bs-toggle="tooltip" title="Cadastro e gestão de clientes">
                             <i class="bi bi-building"></i>
                             <span>Clientes</span>
                         </a>
                     </li>
                     
                     <li class="sidebar-nav-item">
-                        <a href="#" class="sidebar-nav-link">
+                        <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Relatórios'); return false;"
+                           data-bs-toggle="tooltip" title="Relatórios gerenciais e estatísticas">
                             <i class="bi bi-graph-up"></i>
                             <span>Relatórios</span>
                         </a>
@@ -176,23 +179,26 @@
                 <div class="sidebar-heading">Configurações</div>
                 
                 <li class="sidebar-nav-item">
-                    <a href="#" class="sidebar-nav-link">
+                    <a href="{{ route('profile.edit') }}" class="sidebar-nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
+                       data-bs-toggle="tooltip" title="Editar dados do perfil">
                         <i class="bi bi-person"></i>
                         <span>Meu Perfil</span>
                     </a>
                 </li>
                 
                 <li class="sidebar-nav-item">
-                    <a href="#" class="sidebar-nav-link">
+                    <a href="#" class="sidebar-nav-link" onclick="showComingSoon('Configurações'); return false;"
+                       data-bs-toggle="tooltip" title="Configurações do sistema">
                         <i class="bi bi-gear"></i>
                         <span>Configurações</span>
                     </a>
                 </li>
                 
                 <li class="sidebar-nav-item">
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                         @csrf
-                        <button type="submit" class="sidebar-nav-link w-100 border-0 bg-transparent text-start">
+                        <button type="submit" class="sidebar-nav-link w-100 border-0 bg-transparent text-start"
+                                data-bs-toggle="tooltip" title="Sair do sistema">
                             <i class="bi bi-box-arrow-right"></i>
                             <span>Sair</span>
                         </button>
@@ -208,5 +214,44 @@
     @else
         @yield('content')
     @endauth
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Inicializar tooltips globalmente
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        
+        // Toast global para funcionalidades em desenvolvimento
+        function showComingSoon(feature) {
+            const toastHtml = `
+                <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-info text-white">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong class="me-auto">Em Breve</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            A funcionalidade <strong>${feature}</strong> está em desenvolvimento e estará disponível em breve.
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            
+            setTimeout(() => {
+                const toasts = document.querySelectorAll('.toast');
+                toasts.forEach(toast => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.parentElement.remove(), 300);
+                });
+            }, 3500);
+        }
+    </script>
 </body>
 </html>
