@@ -36,10 +36,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pedidos
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [OrderController::class, 'create'])
-        ->middleware(CheckRole::class . ':loja,admin')
+        ->middleware(CheckRole::class . ':loja')
         ->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])
-        ->middleware(CheckRole::class . ':loja,admin')
+        ->middleware(CheckRole::class . ':loja')
         ->name('orders.store');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])

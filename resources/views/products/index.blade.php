@@ -8,15 +8,23 @@
 <div class="mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4 class="mb-1 fw-bold">Catálogo de Produtos</h4>
+            <h4 class="mb-1 fw-bold">
+                Catálogo de Produtos
+                <i class="bi bi-info-circle text-primary ms-2" data-bs-toggle="tooltip" 
+                   title="Lista completa de produtos. Use a busca para filtrar, clique nos cabeçalhos para ordenar, e selecione produtos para excluir em lote."></i>
+            </h4>
             <p class="text-muted small mb-0">Tabela interativa com busca, filtros e ordenação</p>
         </div>
         <div>
-            <button id="deleteSelectedBtn" class="btn btn-danger me-2" style="display: none;" onclick="deleteSelected()">
+            @if(Auth::user()->role === 'admin')
+            <button id="deleteSelectedBtn" class="btn btn-danger me-2" style="display: none;" onclick="deleteSelected()"
+                    data-bs-toggle="tooltip" title="Exclui permanentemente os produtos selecionados do sistema">
                 <i class="bi bi-trash me-1"></i>
                 Excluir Selecionados (<span id="selectedCount">0</span>)
             </button>
-            <a href="{{ route('products.import') }}" class="btn btn-primary">
+            @endif
+            <a href="{{ route('products.import') }}" class="btn btn-primary"
+               data-bs-toggle="tooltip" title="Importar produtos em massa via planilha Excel ou CSV">
                 <i class="bi bi-upload me-1"></i>
                 Importar Excel/CSV
             </a>
@@ -30,9 +38,12 @@
                     <table id="productsTable" class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
+                                @if(Auth::user()->role === 'admin')
                                 <th style="width: 3%;">
-                                    <input type="checkbox" id="selectAll" class="form-check-input" title="Selecionar todos">
+                                    <input type="checkbox" id="selectAll" class="form-check-input" 
+                                           data-bs-toggle="tooltip" title="Selecionar/desselecionar todos os produtos">
                                 </th>
+                                @endif
                                 <th style="width: 8%;">Código</th>
                                 <th style="width: 25%;">Descrição</th>
                                 <th style="width: 12%;">Categoria</th>
@@ -45,9 +56,11 @@
                         <tbody>
                             @forelse($products as $product)
                             <tr>
+                                @if(Auth::user()->role === 'admin')
                                 <td>
                                     <input type="checkbox" class="form-check-input row-select" value="{{ $product->id }}" data-codigo="{{ $product->codigo }}">
                                 </td>
+                                @endif
                                 <td>
                                     <span class="badge bg-primary">{{ $product->codigo }}</span>
                                 </td>
@@ -78,12 +91,21 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <button class="btn btn-outline-primary btn-sm" onclick="viewProduct({{ $product->id }})" title="Ver">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewProduct({{ $product->id }})" 
+                                                data-bs-toggle="tooltip" title="Ver detalhes do produto">
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        <button class="btn btn-outline-success btn-sm" onclick="addToCart({{ $product->id }})" title="Adicionar">
+                                        @if(Auth::user()->isLoja())
+                                        <button class="btn btn-outline-success btn-sm" onclick="addToCart({{ $product->id }})" 
+                                                data-bs-toggle="tooltip" title="Adicionar produto ao pedido">
                                             <i class="bi bi-bag-plus"></i>
                                         </button>
+                                        @else
+                                        <button class="btn btn-outline-secondary btn-sm" disabled 
+                                                data-bs-toggle="tooltip" title="Apenas lojas podem criar pedidos">
+                                            <i class="bi bi-bag-plus"></i>
+                                        </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -110,6 +132,12 @@ let dataTable;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Inicializando DataTable e eventos...');
     
+    // Inicializar tooltips do Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
     // Inicializar DataTable
     dataTable = new DataTable('#productsTable', {
         responsive: true,
@@ -119,13 +147,20 @@ document.addEventListener('DOMContentLoaded', function() {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
         },
         columnDefs: [
+            @if(Auth::user()->role === 'admin')
             { orderable: false, targets: [0, 7] },
+            @else
+            { orderable: false, targets: [6] },
+            @endif
         ],
         dom: '<"row mb-2"<"col-sm-12 col-md-4"l><"col-sm-12 col-md-8"f>>' +
               '<"row"<"col-sm-12"tr>>' +
               '<"row mt-2"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         drawCallback: function() {
             console.log('Tabela redesenhada, reattachando listeners');
+            // Reinicializar tooltips após redraw
+            const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltips.map(el => new bootstrap.Tooltip(el));
             attachCheckboxListeners();
         }
     });

@@ -59,7 +59,11 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col">
-            <h1 class="h3 fw-bold">Novo Pedido</h1>
+            <h1 class="h3 fw-bold">
+                Novo Pedido
+                <i class="bi bi-info-circle text-primary ms-2" data-bs-toggle="tooltip" 
+                   title="Adicione produtos ao carrinho usando a busca ou clicando nos cards. Revise as quantidades e finalize o pedido com as condições de pagamento desejadas."></i>
+            </h1>
             <p class="text-muted">Adicione produtos ao carrinho e finalize seu pedido</p>
         </div>
     </div>
@@ -83,6 +87,8 @@
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">
                         <i class="bi bi-search me-2"></i>Buscar Produto
+                        <i class="bi bi-info-circle text-primary ms-2" data-bs-toggle="tooltip" 
+                           title="Digite código ou nome do produto para buscar. O produto será adicionado automaticamente ao carrinho ao selecionar."></i>
                     </h5>
                     <select id="productSearch" class="form-select" style="width: 100%">
                         <option value="">Digite para buscar produtos...</option>
@@ -167,10 +173,12 @@
                         <span>Subtotal:</span>
                         <strong id="cartSubtotal">R$ 0,00</strong>
                     </div>
-                    <button type="button" class="btn btn-success w-100 mt-2" onclick="proceedToCheckout()">
+                    <button type="button" class="btn btn-success w-100 mt-2" onclick="proceedToCheckout()"
+                            data-bs-toggle="tooltip" title="Preencha as condições de pagamento e observações antes de confirmar">
                         <i class="bi bi-check-circle me-2"></i>Finalizar Pedido
                     </button>
-                    <button type="button" class="btn btn-outline-danger w-100 mt-2" onclick="clearCart()">
+                    <button type="button" class="btn btn-outline-danger w-100 mt-2" onclick="clearCart()"
+                            data-bs-toggle="tooltip" title="Remove todos os produtos do carrinho">
                         <i class="bi bi-trash me-2"></i>Limpar Carrinho
                     </button>
                 </div>
@@ -216,7 +224,11 @@
 
                         <!-- Condição de Pagamento -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Condição de Pagamento *</label>
+                            <label class="form-label fw-bold">
+                                Condição de Pagamento *
+                                <i class="bi bi-info-circle text-primary ms-1" data-bs-toggle="tooltip" 
+                                   title="Selecione o prazo de pagamento. Prazos menores podem ter descontos aplicados automaticamente."></i>
+                            </label>
                             <select name="payment_terms" class="form-select" required>
                                 <option value="">Selecione...</option>
                                 @foreach($paymentTerms as $term)
@@ -227,7 +239,11 @@
 
                         <!-- Observações -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Observações</label>
+                            <label class="form-label fw-bold">
+                                Observações
+                                <i class="bi bi-info-circle text-primary ms-1" data-bs-toggle="tooltip" 
+                                   title="Adicione informações extras sobre o pedido, como endereço de entrega específico, horário preferencial, etc."></i>
+                            </label>
                             <textarea name="observations" class="form-control" rows="3" placeholder="Informações adicionais (opcional)"></textarea>
                         </div>
 
@@ -254,6 +270,12 @@
 let cart = [];
 
 $(document).ready(function() {
+    // Inicializar tooltips do Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
     // Inicializar Select2
     $('#productSearch').select2({
         theme: 'bootstrap-5',

@@ -35,18 +35,24 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h4 class="fw-bold mb-3">Importar Excel / CSV</h4>
+                <h4 class="fw-bold mb-3">
+                    Importar Excel / CSV
+                    <i class="bi bi-info-circle text-primary ms-2" data-bs-toggle="tooltip" 
+                       title="Baixe o modelo, preencha com seus produtos e faça upload. O sistema validará e importará automaticamente."></i>
+                </h4>
                 <p class="text-muted">Baixe o modelo, preencha e envie para importar produtos em lote.</p>
                 
                 <div class="alert alert-primary mb-3">
                     <h6 class="alert-heading"><i class="bi bi-download me-2"></i>Baixar Modelos de Importação</h6>
                     <p class="mb-2 small">Preencha todos os campos, especialmente o <strong>preço</strong>!</p>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('products.import.downloadExcel') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('products.import.downloadExcel') }}" class="btn btn-sm btn-outline-primary"
+                           data-bs-toggle="tooltip" title="Baixar planilha Excel com exemplos e formatação correta">
                             <i class="bi bi-file-earmark-excel me-1"></i>
                             Baixar Modelo Excel (.xlsx)
                         </a>
-                        <a href="{{ route('products.import.downloadCsv') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('products.import.downloadCsv') }}" class="btn btn-sm btn-outline-primary"
+                           data-bs-toggle="tooltip" title="Baixar arquivo CSV (compatível com qualquer editor de planilhas)">
                             <i class="bi bi-file-earmark-text me-1"></i>
                             Baixar Modelo CSV (.csv)
                         </a>
@@ -76,11 +82,16 @@
                 <form method="POST" action="{{ route('products.import.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Arquivo Preenchido</label>
+                        <label class="form-label fw-semibold">
+                            Arquivo Preenchido
+                            <i class="bi bi-info-circle text-primary ms-1" data-bs-toggle="tooltip" 
+                               title="Selecione o arquivo Excel ou CSV preenchido. Produtos com códigos duplicados serão atualizados."></i>
+                        </label>
                         <input type="file" name="file" class="form-control" accept=".xlsx,.csv,.txt" required>
                         <small class="text-muted">Formatos suportados: .xlsx, .csv</small>
                     </div>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary"
+                            data-bs-toggle="tooltip" title="Enviar arquivo para processamento e importação">
                         <i class="bi bi-upload me-1"></i>
                         Importar
                     </button>
@@ -89,4 +100,14 @@
         </div>
     </div>
 </div>
+
+<script>
+// Inicializar tooltips do Bootstrap
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 @endsection
